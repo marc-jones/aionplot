@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017)
+client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
 #client = MongoClient('db', 27017)
 db = client.tododb
 
