@@ -1,26 +1,16 @@
 import os
-from flask import Flask, redirect, url_for, request, render_template
+from flask import Flask
 from pymongo import MongoClient
+import logging, sys
 
 app = Flask(__name__)
 
-client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
-db = client.tododb
+mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017,
+    connect=False)
 
-@app.route('/')
-def todo():
-    _items = db.tododb.find()
-    items = [item for item in _items]
-    return render_template('todo.html', items=items)
+from routes import *
 
-@app.route('/new', methods=['POST'])
-def new():
-    item_doc = {
-        'name': request.form['name'],
-        'description': request.form['description']
-    }
-    db.tododb.insert_one(item_doc)
-    return redirect(url_for('todo'))
+logging.basicConfig(stream=sys.stderr)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

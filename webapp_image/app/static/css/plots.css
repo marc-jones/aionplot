@@ -1,0 +1,144 @@
+html {
+    overflow-y:scroll;
+}
+
+p {
+    text-align: justify;
+}
+
+.plotbackground {
+    fill: #e5e5e5;
+}
+
+.key {
+    pointer-events: all;
+}
+
+.vernalization {
+    fill: #9EBCF0;
+    fill-opacity: 0.4
+}
+
+.axis line {
+    fill: none;
+    stroke: #7f7f7f;
+    shape-rendering: crispEdges;
+    stroke-width: 2;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 14px;
+    fill: #7f7f7f;
+}
+
+.facetlabel rect {
+        fill: #cccccc;
+}
+
+.arabidopsis_symbols {
+    color: #888888;
+    font-size: small;
+}
+
+.gene path {
+    stroke-width: 3;
+    opacity: 1;
+}
+
+/*This is just a dummy class so d3 can access the opacity*/
+.gene_transition {
+    opacity: 0.1;
+}
+
+
+/*///// HERE BE HACKS /////*/
+.legend circle {
+    r: 4;
+}
+
+.ie_circle_radius {
+    width: 4px;
+}
+/*///// HERE ENDETH HACKS /////*/
+
+
+.legend line {
+    stroke-width: 3;
+}
+
+.error_bar line {
+    stroke-width: 1;
+}
+
+.grid line {
+  fill: none;
+  stroke: white;
+  stroke-width: 1.6px;
+  opacity: 0.5;
+}
+
+.grid .minor {
+  stroke-width: 0.4px;
+}
+
+.selectize-control .selectize-dropdown .symbols {
+  font-size: 12px;
+  display: block;
+  opacity: 0.5;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.selectize-control .selectize-dropdown .agi {
+  margin-right: 5px;
+}
+
+.selectize-control .selectize-dropdown [data-selectable] {
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* http://bootsnipp.com/snippets/featured/fancy-bootstrap-checkboxes */
+.form-group {
+    margin-bottom: 5px;
+}
+
+.form-group label {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.form-group input[type="checkbox"] {
+    display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span {
+    width: 20px;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:first-child {
+    display: none;
+}
+.form-group input[type="checkbox"] + .btn-group > label span:last-child {
+    display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
+    display: inline-block;
+}
+.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
+    display: none;
+}
+
+#slider-range {
+    margin-bottom: 50px;
+}
+
+.download-btn {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+}

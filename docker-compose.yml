@@ -3,7 +3,7 @@ services:
     web:
         image: flaskapp
         deploy:
-            replicas: 2
+            replicas: 1
             restart_policy:
                 condition: on-failure
         ports:

@@ -1,0 +1,38 @@
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 col-lg-offset-2">
+            <center><h2 id="sec0">Search</h2></center>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9">
+            <div id='result_graph'><svg></svg></div>
+        </div>
+        <div class="col-md-3" id="rightCol">
+            <div class="well">
+                <ul class="nav nav-stacked" id="sidebar">
+                    <label for="select-agi">Search AGI</label>
+                    <input type="text" id="select-agi"/>
+                    <div class="checkbox">
+                        <label><input type="checkbox" id='flip_axis'>Flip the facet labels?</label>
+                        <label><input type="checkbox" id='error_bars'>Display error bars?</label>
+                    </div>
+                    <label for="slider-range">Select period of time to graph:</label>
+                    <div id="slider-range"></div>
+                    <div>
+                        <button id='plot_download' type="button" class="btn btn-default download-btn">
+                            <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download Plot
+                        </button>
+                        <button id='fasta_download' type="button" class="btn btn-default download-btn">
+                            <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download FASTA
+                        </button>
+                        <button id='ts_data_download' type="button" class="btn btn-default download-btn">
+                            <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download Data
+                        </button>
+                    </div>
+                    <div id='transcript_checkboxes'></div>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

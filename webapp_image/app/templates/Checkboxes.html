@@ -1,0 +1,38 @@
+{% if checkbox_dict|length != 0 %}
+    {% for agi in checkbox_dict.keys() %}
+        <h3>{{ agi }}</h3>
+        <p class='arabidopsis_symbols'>{{ checkbox_dict[agi][0]['symbolString'] }}</p>
+        {% for cuff in checkbox_dict[agi] %}
+            <div class="[ form-group ]">
+                <input class="gene_checkbox" value="{{ cuff['gene'] }}" homology="{{ agi }}" type="checkbox" name="{{ agi }}{{ cuff['gene'] }}" id="{{ agi }}{{ cuff['gene'] }}" autocomplete="off" />
+                <div class="[ btn-group ]" data-toggle="tooltip" title="{{ cuff['chromosome'] }}">
+                    <label for="{{ agi }}{{ cuff['gene'] }}" class="[ btn btn-{{ cuff['classLabel'] }} ]">
+                        <span class="[ glyphicon glyphicon-ok ]"></span>
+                        <span></span>
+                    </label>
+                    <label for="{{ agi }}{{ cuff['gene'] }}" class="[ btn btn-{{ cuff['classLabel'] }} active ]">
+                        {{ cuff['gene'] }}
+                    </label>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+
+{% if blast_list|length != 0 %}
+    <h3>BLAST Hits</h3>
+    {% for cuff in blast_list %}
+        <div class="[ form-group ]">
+            <input class="gene_checkbox" value="{{ cuff['gene'] }}" homology="blast" type="checkbox" name="blast{{ cuff['gene'] }}" id="blast{{ cuff['gene'] }}" autocomplete="off" />
+            <div class="[ btn-group ]" data-toggle="tooltip" title="{{ cuff['chromosome'] }}">
+                <label for="blast{{ cuff['gene'] }}" class="[ btn btn-default ]">
+                    <span class="[ glyphicon glyphicon-ok ]"></span>
+                    <span></span>
+                </label>
+                <label for="blast{{ cuff['gene'] }}" class="[ btn btn-default active ]">
+                    {{ cuff['gene'] }}
+                </label>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}

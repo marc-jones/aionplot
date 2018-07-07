@@ -1,0 +1,15 @@
+{% if query_sequence == '' %}
+    <div class="alert alert-info" role="alert">
+        <p>Please enter a sequence in the box above to search the database with BLAST.</p>
+    </div>
+{% else %}
+    {% if blast_hits_int == 0 %}
+        <div class="alert alert-danger" role="alert">
+            <p>No sequences in the database show homology to the above sequence.</p>
+        </div>
+    {% else %}
+        <div class="alert alert-success" role="alert">
+            <p>There are {{blast_hits_int}} BLAST hits to the above sequence. Go to the Search tab to plot their temporal expression patterns.</p>
+        </div>
+    {% endif %}
+{% endif %}
