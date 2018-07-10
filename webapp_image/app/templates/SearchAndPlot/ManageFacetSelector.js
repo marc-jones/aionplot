@@ -14,6 +14,7 @@ $(document).on("change", "select", function() {
     var facet_selection = {};
     $('select').each(function() {facet_selection[$(this).attr('id')] = $(this).val();});
     $('#facet_selectors').html(return_facet_selector_html(facet_selection));
+    $.event.trigger({type: 'replot'});
 });
 
 var return_facet_selector_html = function(facet_selection)

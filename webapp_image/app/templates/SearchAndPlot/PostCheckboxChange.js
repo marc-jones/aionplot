@@ -11,7 +11,8 @@ $(document).on("change", "input[type='checkbox']", function() {
         }
     });
     $.ajax({url: "{{ url_for('postcheckboxchange') }}" + "?names=" + selected_names}).done(
-        function (measurement_data) {
-            console.log(measurement_data);
+        function (new_measurement_data) {
+            measurement_data = new_measurement_data;
+            $.event.trigger({type: 'replot'});
         })
 });

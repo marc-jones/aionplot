@@ -17,3 +17,5 @@ plot_vars = {
     legendWidthProportion: 0.8,
     facets: {{ facets|tojson }}
 }
+
+measurement_data = {}
