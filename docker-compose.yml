@@ -17,10 +17,12 @@ services:
     db:
         image: mongo
         volumes:
-            - "/home/marcjones/Downloads/mongo_data:/data/db"
+            - "~/scratch/mongo_data:/data/db"
         deploy:
             placement:
                 constraints: [node.role == manager]
+            restart_policy:
+                condition: on-failure
         networks:
             - webapp
         ports:

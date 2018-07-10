@@ -13,32 +13,120 @@ import markdown
 #import os
 #import xml.etree.ElementTree as ET
 
+def get_measurement_data(list_of_names):
+    if 'most_recent_search' in session:
+        cache = session['most_recent_search']
+        cached_names = [res['name'] for res in cache]
+    else:
+        cached_names = []
+    # only open the connection to the database if one of the records isn't in
+    # the cache. usually this won't be the case, but if the user has more than
+    # one instance of the app open, then it will be a problem. This is also
+    # necessary if the user has turned off cookies
+    for name in list_of_names:
+        if not name in cached_names:
+            db = mungo_client['time_series']
+            measurements_collection = db['measurements']
+            break
+    records = []
+    for name in list_of_names:
+        if name in cached_names:
+            records.append(cache[cached_names.index(name)])
+        else:
+            search_results = [
+                res for res in measurements_collection.find({'name': name})]
+            records += search_results
+    for res in records:
+        if '_id' in res.keys():
+            del(res['_id'])
+    session['most_recent_search'] = records
+    return(records)
+
+# Takes search terms and then returns the names associated with each search
+# term, with some added information such as nicknames
+def process_search_terms(search_terms):
+    db = mungo_client['time_series']
+    search_terms_collection = db['search_terms']
+    results_dict = {}
+    for term in search_terms:
+        search_results = [res for res in search_terms_collection.find(
+            {'name': term})]
+        if (len(search_results) == 1 and
+            search_results[0]['term_type'] == 'direct'):
+            results_dict[term] = {
+                'heading': '',
+                'subheading': '; '.join(search_results[0]['nicknames']),
+                'records': [{
+                    'name': search_results[0]['name'],
+                    'tooltip': '',
+                    'label_status': 'default'}]
+            }
+    return(results_dict)
+
+def get_facets():
+    if 'facet_info' in session:
+        facet_info = session['facet_info']
+    else:
+        db = mungo_client['time_series']
+        facet_info = [res for res in db['facets'].find({})][0]
+        del(facet_info['_id'])
+        session['facet_info'] = facet_info
+    return(facet_info)
+
 @app.route('/')
 def landing():
     with app.open_resource('static/content/landing.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
     landingPage = render_template('Landing.html', content=content)
-
     with app.open_resource('static/content/about.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
     aboutPage = render_template('About.html', content=content)
-
     with app.open_resource('static/content/howtouse.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
     howToUsePage = render_template('HowToUse.html', content=content)
-
     searchPage = render_template('Search.html')
     blastPage = render_template('Blast.html')
     tablePage = render_template('Table.html')
-    searchScripts = render_template('SearchScripts.js')
+    facets=get_facets()
+    searchandplotjs = render_template('SearchAndPlot.js', facets=facets)
     return(render_template('Base.html',
                            landingPage=landingPage,
                            aboutPage=aboutPage,
                            howToUsePage=howToUsePage,
                            searchPage=searchPage,
                            blastPage=blastPage,
-                           searchScripts=searchScripts,
+                           searchandplotjs=searchandplotjs,
                            tablePage=tablePage))
+
+@app.route('/postsearch')
+def postsearch():
+    search_terms = request.args.get('term').split(',')
+    checkbox_dict = process_search_terms(search_terms)
+    query_sequence = request.args.get('sequence')
+    blast_list = []
+    return(jsonify(
+        checkbox_html=render_template('Checkboxes.html',
+            checkbox_dict=checkbox_dict),
+        blast_alert_html=render_template('BlastAlert.html',
+            blast_hits_int=len(blast_list), query_sequence=query_sequence)
+    ))
+
+@app.route('/postcheckboxchange')
+def postcheckboxchange():
+    names = request.args.get('names').split(',')
+    measurement_data = get_measurement_data(names)
+    return(jsonify(measurement_data))
+
+@app.route('/autocomplete', methods=['GET'])
+def autocomplete():
+    search_term = request.args.get('term')
+    db = mungo_client['time_series']
+    search_terms_collection = db['search_terms']
+    regx = re.compile('^' + search_term, re.IGNORECASE)
+    search_results = [{'name': res['name'], 'nicknames': res['nicknames']}
+        for res in search_terms_collection.find({ '$or': [{'name': regx},
+        {'nicknames': {'$in': [regx]}}]}).limit(20)]
+    return(jsonify(json_list=search_results))
 
 @app.route('/downloadpdf', methods=['POST'])
 def downloadpdf():
@@ -121,74 +209,6 @@ def downloadtsdata():
         #'attachment; filename=time_series_data.tsv')
     #return response
 
-@app.route('/returntranscriptcheckboxes')
-def returntranscriptcheckboxes():
-    return()
-    #agi_codes = request.args.get('term').split(',')
-    #db = mungo_client['darmor']
-    #exp_collection = db['ts_data']
-
-    ## potentially reduce the calls to the database by checking to see if they
-    ## have previously downloaded the data and have it in a cookie
-
-    #search_list = []
-    #checkbox_dict = {}
-    #if not agi_codes == ['']:
-        #for agi in agi_codes:
-            #search_results = [res for res in exp_collection.find(
-                                                #{
-                                                    #'homology': {
-                                                        #'$elemMatch': {
-                                                            #'agi': agi
-                                                        #}
-                                                    #}
-                                                #})]
-            #search_list += search_results
-            #checkbox_dict[agi] = [
-                #{
-                    #'gene': res['gene'],
-                    #'chromosome': res['chromosome'],
-                    #'symbolString':
-                        #returnArabidopsisSymbols(agi, res['homology']),
-                    #'classLabel':
-                        #returnBrassicaGeneLabelType(agi,
-                                                    #res['homology'][0]['agi'])
-                #} for res in search_results]
-
-    #query_sequence = request.args.get('sequence')
-    #blast_list = []
-    #if not query_sequence == '':
-        #blast_results = blastquery(query_sequence)
-        #if len(blast_results) > 0:
-            #for gene_name in blast_results.keys():
-                #search_results = [res for res in
-                    #exp_collection.find({'gene': gene_name})]
-                #search_list += search_results
-                #blast_list += [
-                    #{
-                        #'gene': res['gene'],
-                        #'chromosome': res['chromosome']
-                    #} for res in search_results]
-
-    ## strip the _id value as it isn't serializable
-    #for res in search_list:
-        #if '_id' in res.keys():
-            #del(res['_id'])
-
-    ## I tried adding search results to the cache if they weren't already there
-    ## to get around the problem of users having multiple instances open.
-    ## however for some reason the cache wasn't being updated. I've decided that
-    ## it's probably a bad idea anyway, as it could result in the cache getting
-    ## huge. the implemented method should minimise the calls to the database.
-    ## the exception is if a user has multiple instances of the app open and
-    ## keeps switching between them
-    #session['most_recent_search'] = search_list
-
-    #return(jsonify(checkbox_html=render_template('Checkboxes.html',
-        #checkbox_dict=checkbox_dict, blast_list=blast_list),
-        #blast_result_summary_html=render_template('BlastResults.html',
-        #blast_hits_int=len(blast_list), query_sequence=query_sequence)))
-
 #def returnBrassicaGeneLabelType(agi, agiQuery):
     #classLabel = 'default'
     #if re.sub('\.[0-9]', '', agiQuery) in agi:
@@ -204,71 +224,6 @@ def returntranscriptcheckboxes():
             #symbols = '; '.join(homology_entry['symbols'])
             #return(symbols)
     #return(symbols)
-
-@app.route('/returnexpressiondata')
-def returnexpressiondata():
-    return()
-    #gene_names = request.args.get('term').split(',')
-
-    #if 'most_recent_search' in session:
-        #current_cache = session['most_recent_search']
-        #currently_cached_genes = [res['gene'] for res in current_cache]
-    #else:
-        #currently_cached_genes = []
-
-    ## only open the connection to the databse if one of the genes isn't in the
-    ## cache. usually this won't be the case, but if the user has more than one
-    ## instance of the app open, then it will be a problem. This is also
-    ## necessary if the user has turned off cookies
-    #for gene in gene_names:
-        #if not gene in currently_cached_genes:
-            #db = mungo_client['darmor']
-            #exp_collection = db['ts_data']
-            #break
-
-    #selected_genes = []
-
-    #for gene in gene_names:
-        #if gene in currently_cached_genes:
-            #selected_genes.append(
-                #current_cache[currently_cached_genes.index(gene)])
-        #else:
-            #search_results = [
-                #res for res in exp_collection.find({'gene': gene})]
-            #selected_genes += search_results
-
-    #for res in selected_genes:
-        #if '_id' in res.keys():
-            #del(res['_id'])
-
-    #return(jsonify(selected_genes=selected_genes))
-
-
-@app.route('/autocomplete', methods=['GET'])
-def autocomplete():
-    return()
-    #value = request.args.get('term')
-    #db = mungo_client['darmor']
-    #agi_collection = db['agi_codes']
-
-    #regx = re.compile('^' + value, re.IGNORECASE)
-
-    #search_results = [{'agi': res['agi'], 'symbols': res['symbols']}
-                      #for res in agi_collection.find(
-                          #{
-                              #'$or': [
-                                  #{
-                                      #'agi': regx
-                                  #},
-                                  #{
-                                      #'symbols': {
-                                          #'$in': [regx]
-                                      #}
-                                  #}
-                               #]
-                          #}).limit(20)]
-
-    #return(jsonify(json_list=search_results))
 
 #def blastquery(query_sequence):
     #tmp_file_link = tempfile.mkstemp()

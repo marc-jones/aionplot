@@ -11,10 +11,10 @@
         <div class="col-md-3" id="rightCol">
             <div class="well">
                 <ul class="nav nav-stacked" id="sidebar">
-                    <label for="select-agi">Search AGI</label>
-                    <input type="text" id="select-agi"/>
+                    <label for="select-agi">Search:</label>
+                    <input type="text" id="search-box"/>
+                    <div id="facet_selectors"></div>
                     <div class="checkbox">
-                        <label><input type="checkbox" id='flip_axis'>Flip the facet labels?</label>
                         <label><input type="checkbox" id='error_bars'>Display error bars?</label>
                     </div>
                     <label for="slider-range">Select period of time to graph:</label>
@@ -30,6 +30,7 @@
                             <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download Data
                         </button>
                     </div>
+                    <br>
                     <div id='transcript_checkboxes'></div>
                 </ul>
             </div>

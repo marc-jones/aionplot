@@ -1,57 +1,36 @@
-plot_vars = {
-    aspect_ratio: 4/3,
-    mobile_aspect_ratio: 2/3,
-    mobile_cut_offs: {
-        'min': 300,
-        'max': 500},
-    symbolSize: 60,
-    errorBarEndLength: 10,
-    margin: {
-        'left': 60,
-        'right': 30,
-        'top': 30,
-        'bottom':60,
-        'spacing': 5,
-        'legendline': 20},
-    accessions: ['tapidor', 'westar'],
-    tissues: ['apex', 'leaf'],
-    tickNum: 5,
-    legendWidthProportion: 0.8}
-
+// Sets up the search box
 $(document).ready(function(){
-    $('#select-agi').selectize({
-        valueField: 'agi',
-        labelField: 'agi',
-        searchField: ['agi', 'symbols'],
+    $('#search-box').selectize({
+        valueField: 'name',
+        labelField: 'name',
+        searchField: ['name', 'nicknames'],
         plugins: ['remove_button'],
         options: [],
         create: false,
         load: function(query, callback) {
-            if (!query.length) return callback();
+            if (!query.length) return(callback());
             $.ajax({
                 url: "{{ url_for('autocomplete') }}" + "?term=" + query ,
-                error: function() {
-                    callback();
-                },
-                success: function(res) {
-                    callback(res.json_list);
-                }
+                error: function() {callback();},
+                success: function(res) {callback(res.json_list);}
             });
         },
         render: {
             option: function(item, escape) {
-                return '<div>' +
-                            '<span class="title">' +
-                                '<span class="agi">' + escape(item.agi) + '</span>' +
-                                '<br>' +
-                                '<span class="symbols">' + escape(item.symbols) + '</span>' +
-                            '</span>' +
-                       '</div>';
+                return(
+    '<div>' +
+        '<span class="title">' +
+            '<span class="name">' + escape(item.name) + '</span>' +
+            '<br>' +
+            '<span class="nicknames">' + escape(item.nicknames) + '</span>' +
+        '</span>' +
+    '</div>');
             }
         }
     });
 })
 
+// Sets up the Download buttons
 $(document).ready(function(){
     formatTitle();
     // You can't use an AJAX call to do this, as AJAX doesn't accept pdf files
@@ -83,7 +62,7 @@ $(document).ready(function(){
         form.setAttribute('method', 'post');
         form.setAttribute('name', 'hiddenForm');
         var checked_genes = [];
-        $("input[type='checkbox'].gene_checkbox").each(function( index, listItem ) {
+        $("input[type='checkbox'].record_checkbox").each(function( index, listItem ) {
             if (listItem.checked) {
                 checked_genes.push(listItem.value);
             }
@@ -104,41 +83,7 @@ $(document).ready(function(){
     $('#ts_data_download').on('click', null, "{{ url_for('downloadtsdata') }}", send_checked_genes);
 })
 
-$(document).ready(function(){
-    var update_checkboxes = function() {
-        var checked_genes = [];
-        $("input[type='checkbox'].gene_checkbox").each(function( index, listItem ) {
-            if (listItem.checked) {
-                checked_genes.push(listItem.name);
-            }
-        });
-        $.ajax({url: "{{ url_for('returntranscriptcheckboxes') }}" +
-            "?term=" + $('#select-agi').val() +
-            "&sequence=" + encodeURI($('#sequence').val())}).done(
-            function (data) {
-                $('#transcript_checkboxes').html(data.checkbox_html);
-                $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-                $("input[type='checkbox'].gene_checkbox").each(function( index, listItem ) {
-                    if (checked_genes.indexOf(listItem.getAttribute('name')) > -1)
-                    {
-                        $("input[name='"+ listItem.getAttribute('name') +"']").prop('checked', true).trigger("change");
-                    }
-                });
-                $('#blast_alert').html(data.blast_result_summary_html);
-            });
-    };
-
-    $('#select-agi').change(update_checkboxes);
-    $('#sequence').bind('input propertychange', function() {
-        $('#blast_alert').html(
-            '<div class="alert alert-info" role="alert">' +
-                '<p>Searching...</p>' +
-            '</div>'
-        )
-    });
-    $('#sequence').bind('input propertychange', update_checkboxes);
-});
-
+// Sets up slider
 $(document).ready(function(){
     var slider = document.getElementById('slider-range');
 
@@ -185,148 +130,8 @@ $(document).ready(function(){
     });
 })
 
-$(document).on("change", "input[type='checkbox']", function() {
-    var selected_genes_term = '';
-    homology_array = [];
-    $("input[type='checkbox'].gene_checkbox").each(function( index, listItem ) {
-        if (listItem.checked) {
-            homology_array.push(listItem.getAttribute("homology"))
-            if (selected_genes_term === '') {
-                selected_genes_term = listItem.value;
-            } else {
-                selected_genes_term = selected_genes_term + ',' + listItem.value;
-            }
-        }
-    });
-    $.ajax({url: "{{ url_for('returnexpressiondata') }}" + "?term=" + selected_genes_term}).done(
-        function (exp_data_json) {
-            // if false, tissue rows      accession cols
-            // if true,  tissue cols      accession rows
-            var flipped = false;
-            if ($('#flip_axis')[0].checked) {
-                flipped = true;}
-            var display_errors = false;
-            if ($('#error_bars')[0].checked) {
-                display_errors = true;}
-            var accessions = plot_vars.accessions;
-            var tissues = plot_vars.tissues;
-            exp_data_original = exp_data_json.selected_genes;
-            var slider = document.getElementById('slider-range');
-            var min_time = slider.noUiSlider.get()[0];
-            var max_time = slider.noUiSlider.get()[1];
-            exp_data = remove_time_points_out_of_range(exp_data_original, min_time, max_time)
-            var data_table_array = [];
-            for (gene_idx = 0; gene_idx < exp_data.length; gene_idx++) {
-                if (homology_array[gene_idx] == 'blast') {
-                    var arabidopsis_str = 'NA';
-                    var symbols_str = 'NA';
-                    var identity_str = 'NA';
-                    var hsp_bit_score_str = 'NA';
-                    var length_of_hsp_str = 'NA';
-                } else {
-                    var relevant_homology = exp_data[gene_idx].homology[
-                        exp_data[gene_idx].homology.map(function(e)
-                        {return e.agi;}).indexOf(homology_array[gene_idx])];
-                    var arabidopsis_str = '<a href="https://www.arabidopsis' +
-                        '.org/servlets/TairObject?name=' +
-                        homology_array[gene_idx].replace(/\.[0-9]/, '') +
-                        '&amp;type=locus" target="_blank">' +
-                        homology_array[gene_idx] +'</a>';
-                    var symbols_str = relevant_homology.symbols.join('; ');
-                    var identity_str = relevant_homology.identity;
-                    var hsp_bit_score_str = relevant_homology.hsp_bit_score;
-                    var length_of_hsp_str = relevant_homology.length_of_hsp;
-                }
-                var gene_str = '<a href="http://www.genoscope.cns.fr/' +
-                    'brassicanapus/cgi-bin/gbrowse/colza/?name=' +
-                    exp_data[gene_idx].chromosome + '%3A' +
-                    exp_data[gene_idx].start + '..' + exp_data[gene_idx].end +
-                    '" target="_blank">' + exp_data[gene_idx].gene + '</a>';
-                data_table_array.push(
-                    {
-                        gene: gene_str,
-                        chromosome: exp_data[gene_idx].chromosome,
-                        start: exp_data[gene_idx].start,
-                        end: exp_data[gene_idx].end,
-                        arabidopsis: arabidopsis_str,
-                        symbols: symbols_str,
-                        identity: identity_str,
-                        hsp_bit_score: hsp_bit_score_str,
-                        length_of_hsp: length_of_hsp_str
-                    }
-                );
-            };
-            var table = $('#plot_table').DataTable( {
-                data: data_table_array,
-                destroy: true,
-                columnDefs: [
-                    { title: '', targets: 0, orderable: false},
-                    { title: 'Brassica napus Gene', targets: 1 },
-                    { title: 'Chromosome', targets: 2 },
-                    { title: 'Start (bp)', targets: 3 },
-                    { title: 'End (bp)', targets: 4 },
-                    { title: 'Arabidopsis', targets: 5 },
-                    { title: 'Abbreviation', targets: 6},
-                    { title: 'BLAST Identity', targets: 7 },
-                    { title: 'BLAST HSP Bit Score', targets: 8 },
-                    { title: 'BLAST HSP Length', targets: 9 }
-                ],
-                columns: [
-                    {
-                        "className":      'details-control',
-                        "data":           null,
-                        "defaultContent": '<span class="glyphicon glyphicon-plus"></span>'
-                    },
-                    { data: 'gene' },
-                    { data: 'chromosome' },
-                    { data: 'start' },
-                    { data: 'end' },
-                    { data: 'arabidopsis' },
-                    { data: 'symbols' },
-                    { data: 'identity' },
-                    { data: 'hsp_bit_score' },
-                    { data: 'length_of_hsp' }
-                ],
-                order: [[1, 'asc']]
-            } );
-            $('#plot_table tbody').unbind();
-            $('#plot_table tbody').on('click', 'td.details-control', function () {
-                var tr = $(this).closest('tr');
-                var row = table.row( tr );
-                var td = $(this).closest('td');
 
-                if ( row.child.isShown() ) {
-                    // This row is already open - close it
-                    row.child.hide();
-                    td.empty();
-                    td.append('<span class="glyphicon glyphicon-plus"></span>');
-                }
-                else {
-                    // Open this row
-                    row.child(formatChildRow(exp_data, row)).show();
-                    td.empty();
-                    td.append('<span class="glyphicon glyphicon-minus"></span>');
-                }
-            });
-
-            // flipped is a variable which changes the axes
-            // assigned to tissues or accessions
-            if (flipped)
-            {
-                var rowLabels = accessions;
-                var colLabels = tissues;
-            } else {
-                var rowLabels = tissues;
-                var colLabels = accessions;
-            }
-
-            min_max_arrays_global = return_min_max_arrays(colLabels, rowLabels, exp_data, display_errors)
-            if ($('#search').hasClass('active')) {
-                plot_graph(flipped, display_errors, min_max_arrays_global);}
-        });
-});
-
-
+// What to do when the window resizes
 $(window).on('resize', function() {
     formatTitle();
     var flipped = false;
@@ -515,51 +320,6 @@ var remove_time_points_out_of_range = function(passed_exp_data, min_time,
         return_array.push(gene_object_copy);
     });
     return(return_array);}
-
-////////////// COLOUR FUNCTIONS ///////////////
-// I wanted to emulate the colours used in ggplot2
-// Unfortunately, the colour models used in D3 don't
-// allow this, so I copied these functions from the
-// R source code, complete with all their magic numbers.
-// I do not know how this is working! https://goo.gl/dzvmRC
-var gtrans = function(u) {
-    if (u > 0.00304) {
-        return 1.055 * Math.pow(u, (1 / 2.4)) - 0.055;}
-    else {
-        return 12.92 * u;}}
-
-var hcl2rgb = function(h, c, l) {
-    if (l <= 0.0) {
-        return d3.rgb(0,0,0);}
-    // Step 1 : Convert to CIE-LUV
-    var L = l;
-    var U = c * Math.cos( (Math.PI*h)/180 );
-    var V = c * Math.sin( (Math.PI*h)/180 );
-    // Step 2 : Convert to CIE-XYZ
-    if (L <= 0 && U == 0 && V == 0) {
-        var X = 0;
-        var Y = 0;
-        var Z = 0;}
-    else {
-        if (L > 7.999592) {
-            var Y = 100 * Math.pow((L + 16)/116, 3)}
-        else {
-            var Y = 100 * (L / 903.3)}
-        var u = U / (13 * L) + 0.1978398;
-        var v = V / (13 * L) + 0.4683363;
-        var X =  9.0 * Y * u / (4 * v);
-        var Z =  - X / 3 - 5 * Y + 3 * Y / v;}
-    // Step 4 : CIE-XYZ to sRGB
-    var R = 255 * gtrans(( 3.240479*X-1.537150*Y-0.498535*Z)/100)+0.5;
-    var G = 255 * gtrans((-0.969256*X+1.875992*Y+0.041556*Z)/100)+0.5;
-    var B = 255 * gtrans(( 0.055648*X-0.204043*Y+1.057311*Z)/100)+0.5;
-    if (R>255){R=255}
-    if (G>255){G=255}
-    if (B>255){B=255}
-    if (R<0){R=0}
-    if (G<0){G=0}
-    if (B<0){B=0}
-    return d3.rgb(R,G,B);}
 
 var plot_graph = function(flipped, display_errors, min_max_arrays) {
     var aspect_ratio = plot_vars.aspect_ratio;
