@@ -18,8 +18,13 @@ if os.path.isfile(time_series_data_path):
             line = line.strip().split('\t')
             measurements_dict.setdefault(line[0],
                 {'name': line[0], 'measurements': []})
+            measurement_dict = {headers[idx]: line[idx] for idx in
+                range(1, len(line))}
+            for float_name in headers[1:5]:
+                measurement_dict[float_name] = float(
+                    measurement_dict[float_name])
             measurements_dict[line[0]]['measurements'].append(
-                {headers[idx]: line[idx] for idx in range(1, len(line))})
+                measurement_dict)
             search_terms_dict[line[0]] = {'name': line[0], 'nicknames': [],
                 'term_type': 'direct'}
             for idx in range(5, len(line)):

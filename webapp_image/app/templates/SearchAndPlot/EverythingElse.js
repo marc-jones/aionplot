@@ -197,13 +197,6 @@ var formatChildRow = function(expression_data, row) {
     }
 }
 
-var unique = function(list) {
-    var result = [];
-    $.each(list, function(i, e) {
-        if ($.inArray(e, result) == -1) result.push(e);
-    });
-    return result;}
-
 var return_plot_order = function(colLabels, rowLabels, margin, min_max_arrays,
     plotWidth, plotHeight, flipped) {
     var return_array = [];

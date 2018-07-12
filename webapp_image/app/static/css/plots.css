@@ -41,7 +41,7 @@ p {
     font-size: small;
 }
 
-.gene path {
+.record path {
     stroke-width: 3;
     opacity: 1;
 }
@@ -74,12 +74,12 @@ p {
 .grid line {
   fill: none;
   stroke: white;
-  stroke-width: 1.6px;
+  stroke-width: 2px;
   opacity: 0.5;
 }
 
 .grid .minor {
-  stroke-width: 0.4px;
+  stroke-width: 1px;
 }
 
 .selectize-control .selectize-dropdown .symbols {

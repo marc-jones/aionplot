@@ -22,10 +22,10 @@ $(document).on("replot", function() {
             var include = true;
             facet_names.forEach(function(facet_name) {
                 if (facet_name == facet_selection.row_facet) {
-                    parsed_measurement.row_facet = facet_name;
+                    parsed_measurement.row_facet = measurement[facet_name];
                 }
                 else if (facet_name == facet_selection.col_facet) {
-                    parsed_measurement.col_facet = facet_name;
+                    parsed_measurement.col_facet = measurement[facet_name];
                 }
                 if (facet_selection[facet_name + '_facet'] != undefined) {
                     if (facet_selection[facet_name + '_facet'] != measurement[facet_name]) {
