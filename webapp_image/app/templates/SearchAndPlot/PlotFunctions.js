@@ -24,12 +24,13 @@ var facet_plot = function(measurement_data, element_selector)
     var plotObject = returnPlotObject(measurement_data, plotDetails);
 
     var plotSelection = svg.selectAll('g').data(plotObject).enter().append('g')
-        .attr('row', function(d) {return(d.rowLabel);})
+        .classed('plot', true).attr('row', function(d) {return(d.rowLabel);})
         .attr('col', function(d) {return(d.colLabel);});
 
 //     console.log(plotSelection);
 
     createBackgrounds(plotDetails, plotSelection);
+    addAxisAndLabels(plotDetails, plotObject, svg);
     addRecords(plotDetails, plotSelection);
 
 
@@ -237,6 +238,56 @@ var createBackgrounds = function(plotDetails, plotsD3Selection)
             plotDetails.plotWidth);})
         .attr('y1', passThrough)
         .attr('y2', passThrough);
+}
+
+var addAxisAndLabels = function(plotDetails, plotObject, svgD3Selection)
+{
+    svgD3Selection.selectAll('g').filter('.axis').filter('.y')
+        .data(plotObject.filter(function(d) {return(d.plotColIdx==0);}))
+        .enter().append('g').classed('axis', true).classed('y', true)
+        .attr('transform', function(d) {return('translate(' + d.xPos + ',0)');})
+        .each(function(d) {d3.select(this).call(
+            d3.axisLeft().scale(d.yScaleFunc).ticks(plot_vars.tickNum));});
+    svgD3Selection.selectAll('g').filter('.axis').filter('.x')
+        .data(plotObject.filter(function(d) {
+            return(d.plotRowIdx==(plotDetails.rowLabels.length-1));}))
+        .enter().append('g').classed('axis', true).classed('x', true)
+        .attr('transform', function(d) {
+            return('translate(0,' + (d.yPos + plotDetails.plotHeight) + ')');})
+        .each(function(d) {d3.select(this).call(
+            d3.axisBottom().scale(d.xScaleFunc).ticks(plot_vars.tickNum));});
+    d3.selectAll('path.domain').remove();
+
+    var topFacetLabels = svgD3Selection.selectAll('g').filter('.facetlabel')
+        .filter('.top').data(plotObject.filter(function(d) {
+            return(d.plotRowIdx == 0 && d.colLabel != null);})).enter()
+        .append('g').classed('facetlabel', true).classed('top', true);
+    topFacetLabels.append('rect').attr('x', function(d) {return(d.xPos);})
+        .attr('y', function(d) {return(d.yPos - plot_vars.margin.facetlabel);})
+        .attr('width', plotDetails.plotWidth)
+        .attr('height', plot_vars.margin.facetlabel);
+    topFacetLabels.append('text').attr('x', function(d) {
+        return(d.xPos + (plotDetails.plotWidth / 2));}).attr('y', function(d) {
+        return(d.yPos - (plot_vars.margin.facetlabel / 2));})
+        .attr('text-anchor', 'middle').text(function(d) {return(d.colLabel);});
+
+    var rightFacetLabels = svgD3Selection.selectAll('g').filter('.facetlabel')
+        .filter('.right').data(plotObject.filter(function(d) {
+            return(d.plotColIdx == (plotDetails.colLabels.length-1) &&
+            d.rowLabel != null);})).enter().append('g')
+        .classed('facetlabel', true).classed('right', true);
+    rightFacetLabels.append('rect').attr('x', function(d) {return(d.xPos +
+        plotDetails.plotWidth);}).attr('y', function(d) {return(d.yPos);})
+        .attr('width', plot_vars.margin.facetlabel)
+        .attr('height', plotDetails.plotHeight);
+    rightFacetLabels.append('text').attr('x', function(d) {
+        return(d.xPos + plotDetails.plotWidth +
+        (plot_vars.margin.facetlabel / 2));}).attr('y', function(d) {
+        return(d.yPos + (plotDetails.plotHeight / 2));})
+        .attr('text-anchor', 'middle').text(function(d) {console.log(d.rowLabel); return(d.rowLabel);})
+        .attr('transform', function(d) {return('rotate(90,' + (d.xPos +
+            plotDetails.plotWidth + (plot_vars.margin.facetlabel / 2)) + ',' +
+            (d.yPos + (plotDetails.plotHeight / 2)) + ')')});
 }
 
 var addRecords = function(plotDetails, plotsD3Selection)

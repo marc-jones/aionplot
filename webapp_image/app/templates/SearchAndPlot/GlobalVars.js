@@ -12,7 +12,9 @@ plot_vars = {
         'top': 30,
         'bottom':60,
         'spacing': 5,
-        'legendline': 20},
+        'legendline': 20,
+        'facetlabel': 30
+    },
     tickNum: 5,
     legendWidthProportion: 0.8,
     facets: {{ facets|tojson }}
