@@ -30,9 +30,9 @@ var facet_plot = function(measurement_data, element_selector)
 //     console.log(plotSelection);
 
     createBackgrounds(plotDetails, plotSelection);
-    addAxisAndLabels(plotDetails, plotObject, svg);
     addRecords(plotDetails, plotSelection);
-
+    addAxisAndLabels(plotDetails, plotObject, svg);
+    addLegend(plotDetails, svg);
 
 //     console.log(measurement_data);
 //     console.log(plotDetails);
@@ -110,10 +110,11 @@ var returnPlotDetailsObject = function(measurement_data, svg)
         ((plot_vars.margin.legendline + plot_vars.margin.spacing) *
         numLegendRows)) / rowLabels.length;
 
-    return({legendLabels: legendLabels,
-        maxLegendLabelWidth: maxLegendLabelWidth, numLegendCols: numLegendCols,
-        numLegendRows: numLegendRows, rowLabels: rowLabels,
-        colLabels: colLabels, plotWidth: plotWidth, plotHeight: plotHeight});
+    return({svgWidth: svgWidth, svgHeight: svgHeight,
+        legendLabels: legendLabels, maxLegendLabelWidth: maxLegendLabelWidth,
+        numLegendCols: numLegendCols, numLegendRows: numLegendRows,
+        rowLabels: rowLabels, colLabels: colLabels, plotWidth: plotWidth,
+        plotHeight: plotHeight});
 }
 
 var returnPlotObject = function(measurement_data, plotDetails)
@@ -341,19 +342,86 @@ var addRecords = function(plotDetails, plotsD3Selection)
     recordSelection.append('path').classed('line', true).attr('d', function(d) {
         var plotData = d3.select(this.parentNode.parentNode).datum();
         var lineFunc = d3.line()
-            .x(function(measurement) {return(plotData.xScaleFunc(measurement.time));})
-            .y(function(measurement) {return(plotData.yScaleFunc(measurement.value));});
+            .x(function(measurement) {
+                return(plotData.xScaleFunc(measurement.time));})
+            .y(function(measurement) {
+                return(plotData.yScaleFunc(measurement.value));});
         return(lineFunc(d.measurements));}).attr('fill', 'none');
 
     recordSelection.each(function(d, i) {
         var currentRecord = d3.select(this);
-        var totalRecordNumber = d3.select(this.parentNode).datum().records.length;
-        var colour = returnColour(i, totalRecordNumber);
+        var totalRecordNumber = plotDetails.legendLabels.length;
+        var colour = returnColour(plotDetails.legendLabels.indexOf(d.name),
+            totalRecordNumber);
         currentRecord.selectAll('path').filter('.point').attr('fill', colour);
         currentRecord.selectAll('path').filter('.line').attr('stroke', colour);
     });
 }
 
-var addLegend = function(plotDetails, plotsD3Selection)
+var addLegend = function(plotDetails, svgD3Selection)
 {
+    var legendGroup = svgD3Selection.append('g').attr('class', 'legend');
+    var recordLegendKeys = legendGroup.selectAll('g')
+        .data(plotDetails.legendLabels).enter().append('g')
+        .attr('name', passThrough).classed('key', true);
+
+    recordLegendKeys.append('rect').attr('x', function(name, i) {
+        return(returnLegendPosition(plotDetails, i, {x:0, y:0}).x);})
+        .attr('y', function(name, i) {
+            return(returnLegendPosition(plotDetails, i, {x:0, y:0}).y);})
+        .attr('width', plot_vars.margin.legendline)
+        .attr('height', plot_vars.margin.legendline)
+        .attr('class', 'plotbackground');
+
+    recordLegendKeys.append('path').attr('transform', function(name, i) {
+        var position = returnLegendPosition(plotDetails, i,
+            {x: plot_vars.margin.legendline / 2,
+            y: plot_vars.margin.legendline / 2});
+        return('translate(' + position.x + ',' + position.y + ')');})
+        .attr('d', d3.symbol().size(plot_vars.symbolSize).type(d3.symbols[0]));
+
+    recordLegendKeys.append('line').attr('y1', function(name, i) {
+        return(returnLegendPosition(plotDetails, i, {
+        x:plot_vars.margin.legendline +
+        plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
+        .attr('y2', function(name, i) {
+        return(returnLegendPosition(plotDetails, i, {
+        x:plot_vars.margin.legendline +
+        plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
+        .attr('x1', function(name, i) {
+        return(returnLegendPosition(plotDetails, i, {x:0, y:0}).x);})
+        .attr('x2', function(name, i) {
+        return(returnLegendPosition(plotDetails, i, {
+        x:plot_vars.margin.legendline, y:0}).x);});
+
+    recordLegendKeys.append('text').text(passThrough)
+        .attr('alignment-baseline', 'middle').attr('x', function(name, i) {
+            return(returnLegendPosition(plotDetails, i, {
+            x:plot_vars.margin.legendline + plot_vars.margin.spacing,
+            y:plot_vars.margin.legendline / 2}).x);})
+        .attr('y', function(name, i) {return(returnLegendPosition(
+            plotDetails, i, {x:plot_vars.margin.legendline +
+            plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
+
+    recordLegendKeys.each(function(name, i) {
+        var currentRecord = d3.select(this);
+        var totalRecordNumber = plotDetails.legendLabels.length;
+        var colour = returnColour(plotDetails.legendLabels.indexOf(name),
+            totalRecordNumber);
+        currentRecord.selectAll('path').attr('fill', colour);
+        currentRecord.selectAll('line').attr('stroke', colour);
+    });
+}
+
+var returnLegendPosition = function(plotDetails, idx, offset)
+{
+    var returnValue = {x:
+        (plotDetails.svgWidth * (1 - plot_vars.legendWidthProportion) / 2 ) +
+        ((plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
+        plotDetails.maxLegendLabelWidth) * (idx - plotDetails.numLegendCols *
+        Math.floor(idx / plotDetails.numLegendCols))) + offset.x,
+        y: plotDetails.svgHeight - ((plot_vars.margin.legendline +
+        plot_vars.margin.spacing) * (plotDetails.numLegendRows -
+        Math.floor(idx / plotDetails.numLegendCols))) + offset.y};
+    return(returnValue);
 }
