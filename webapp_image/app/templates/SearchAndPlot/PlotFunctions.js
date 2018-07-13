@@ -258,6 +258,35 @@ var addAxisAndLabels = function(plotDetails, plotObject, svgD3Selection)
             d3.axisBottom().scale(d.xScaleFunc).ticks(plot_vars.tickNum));});
     d3.selectAll('path.domain').remove();
 
+    var yAxes = d3.selectAll('g').filter('.axis').filter('.y').nodes();
+    var yAxesWidth = d3.max(yAxes.map(function(d) {
+        return(d.getBoundingClientRect().width);}))
+
+    svgD3Selection.selectAll('g').filter('.axislabel').filter('.y')
+        .data(plotObject.filter(function(d) {return(d.plotColIdx==0);}))
+        .enter().append('g').classed('axislabel', true).classed('y', true)
+        .append('text')
+        .attr('transform', function(d) {return('translate(' +
+            (d.xPos - yAxesWidth - plot_vars.margin.spacing) + ',' +
+            (d.yPos + (plotDetails.plotHeight / 2)) + ')rotate(-90)');})
+        .attr('text-anchor', 'middle').text(plot_vars.axisLabels.y);
+
+    var xAxes = d3.selectAll('g').filter('.axis').filter('.x').nodes();
+    var xAxesHeight = d3.max(xAxes.map(function(d) {
+        return(d.getBoundingClientRect().height);}))
+
+    svgD3Selection.selectAll('g').filter('.axislabel').filter('.x')
+        .data(plotObject.filter(function(d) {
+            return(d.plotRowIdx==(plotDetails.rowLabels.length-1));}))
+        .enter().append('g').classed('axislabel', true).classed('x', true)
+        .append('text')
+        .attr('transform', function(d) {
+            return('translate(' + (d.xPos + (plotDetails.plotWidth / 2)) + ',' +
+            (d.yPos + plotDetails.plotHeight + xAxesHeight +
+            plot_vars.margin.spacing) + ')');})
+        .attr('text-anchor', 'middle').text(plot_vars.axisLabels.x)
+        .attr('alignment-baseline', 'before-edge');
+
     var topFacetLabels = svgD3Selection.selectAll('g').filter('.facetlabel')
         .filter('.top').data(plotObject.filter(function(d) {
             return(d.plotRowIdx == 0 && d.colLabel != null);})).enter()

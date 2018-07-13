@@ -17,7 +17,11 @@ plot_vars = {
     },
     tickNum: 5,
     legendWidthProportion: 0.8,
-    facets: {{ facets|tojson }}
+    facets: {{ facets|tojson }},
+    axisLabels: {
+        x: 'Time (days)',
+        y: 'Cufflinks FPKM'
+    }
 }
 
 measurement_data = {}
