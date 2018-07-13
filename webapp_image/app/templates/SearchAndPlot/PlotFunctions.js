@@ -353,3 +353,7 @@ var addRecords = function(plotDetails, plotsD3Selection)
         currentRecord.selectAll('path').filter('.line').attr('stroke', colour);
     });
 }
+
+var addLegend = function(plotDetails, plotsD3Selection)
+{
+}
