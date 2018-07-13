@@ -269,7 +269,8 @@ var addAxisAndLabels = function(plotDetails, plotObject, svgD3Selection)
     topFacetLabels.append('text').attr('x', function(d) {
         return(d.xPos + (plotDetails.plotWidth / 2));}).attr('y', function(d) {
         return(d.yPos - (plot_vars.margin.facetlabel / 2));})
-        .attr('text-anchor', 'middle').text(function(d) {return(d.colLabel);});
+        .attr('text-anchor', 'middle').text(function(d) {return(d.colLabel);})
+        .attr('alignment-baseline', 'middle');
 
     var rightFacetLabels = svgD3Selection.selectAll('g').filter('.facetlabel')
         .filter('.right').data(plotObject.filter(function(d) {
@@ -284,10 +285,11 @@ var addAxisAndLabels = function(plotDetails, plotObject, svgD3Selection)
         return(d.xPos + plotDetails.plotWidth +
         (plot_vars.margin.facetlabel / 2));}).attr('y', function(d) {
         return(d.yPos + (plotDetails.plotHeight / 2));})
-        .attr('text-anchor', 'middle').text(function(d) {console.log(d.rowLabel); return(d.rowLabel);})
+        .attr('text-anchor', 'middle').text(function(d) {return(d.rowLabel);})
         .attr('transform', function(d) {return('rotate(90,' + (d.xPos +
             plotDetails.plotWidth + (plot_vars.margin.facetlabel / 2)) + ',' +
-            (d.yPos + (plotDetails.plotHeight / 2)) + ')')});
+            (d.yPos + (plotDetails.plotHeight / 2)) + ')')})
+        .attr('alignment-baseline', 'middle');
 }
 
 var addRecords = function(plotDetails, plotsD3Selection)
