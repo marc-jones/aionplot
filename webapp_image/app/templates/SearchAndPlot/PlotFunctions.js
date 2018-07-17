@@ -411,6 +411,33 @@ var addLegend = function(plotDetails, svgD3Selection)
         currentRecord.selectAll('path').attr('fill', colour);
         currentRecord.selectAll('line').attr('stroke', colour);
     });
+
+    recordLegendKeys.on('mouseover', function(name) {
+
+        d3.selectAll('.record').filter(function(d) {
+            return(d.name != name);}).selectAll('path').transition()
+            .duration(300).style('opacity', 0.1);
+
+        var selectedGeneNodes = d3.selectAll('.record').filter(function(d) {
+            return(d.name == name);}).nodes();
+
+        selectedGeneNodes.forEach(function(node) {
+            d3.select(node.parentNode.appendChild(
+            node.cloneNode(true))).classed('temporary', true);})
+    })
+
+    recordLegendKeys.on('mouseout', function(name) {
+
+        d3.selectAll('.record').filter(function(d) {
+            return(d == undefined || d.name != name);}).selectAll('path')
+            .transition()
+            .duration(300)
+            .style('opacity', 1);
+
+        d3.selectAll('.temporary').remove();
+
+    })
+
 }
 
 var returnLegendPosition = function(plotDetails, idx, offset)
