@@ -17,7 +17,12 @@ plot_vars = {
     },
     tickNum: 5,
     legendWidthProportion: 0.8,
-    facets: {{ facets|tojson }},
+    flags: {{ flags|tojson }},
+    {% if 'facets' in flags.keys() %}
+        facets: {{ flags['facets']|tojson }},
+    {% else %}
+        facets: {},
+    {% endif %}
     axisLabels: {
         x: 'Time (days)',
         y: 'Cufflinks FPKM'

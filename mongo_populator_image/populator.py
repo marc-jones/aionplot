@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 import os
+import yaml
 
 measurements_dict = {}
 search_terms_dict = {}
@@ -48,9 +49,10 @@ search_terms_collection = db['search_terms']
 for document in search_terms_dict.values():
     search_terms_collection.insert(document)
 
-# Create the facets collection
-facets_collection = db['facets']
+# Create the flags YAML
+yaml_path = os.path.join(os.environ['YAML_LOCATION'], 'flags.yaml')
 facet_dict = {name: list(facet_dict[name]) for name in facet_dict}
-facets_collection.insert(facet_dict)
+flags_dict = {'facets': facet_dict}
+yaml.dump(flags_dict, open(yaml_path, 'w'))
 
 print('Database filling complete')

@@ -3,6 +3,8 @@ from flask import (Flask, url_for, request, render_template, jsonify, session,
 from main import app, mungo_client
 import re
 import markdown
+import yaml
+import os
 
 ## imports required to allow the user to download the graph as a PDF
 #import pdfkit
@@ -63,15 +65,13 @@ def process_search_terms(search_terms):
             }
     return(results_dict)
 
-def get_facets():
-    if 'facet_info' in session:
-        facet_info = session['facet_info']
+def get_flags():
+    flags_path = os.path.join(os.environ['YAML_LOCATION'], 'flags.yaml')
+    if os.path.isfile(flags_path):
+        flags = yaml.load(open(flags_path))
     else:
-        db = mungo_client['time_series']
-        facet_info = [res for res in db['facets'].find({})][0]
-        del(facet_info['_id'])
-        session['facet_info'] = facet_info
-    return(facet_info)
+        flags = {}
+    return(flags)
 
 @app.route('/')
 def landing():
@@ -87,8 +87,8 @@ def landing():
     searchPage = render_template('Search.html')
     blastPage = render_template('Blast.html')
     tablePage = render_template('Table.html')
-    facets=get_facets()
-    searchandplotjs = render_template('SearchAndPlot.js', facets=facets)
+    flags=get_flags()
+    searchandplotjs = render_template('SearchAndPlot.js', flags=flags)
     return(render_template('Base.html',
                            landingPage=landingPage,
                            aboutPage=aboutPage,
