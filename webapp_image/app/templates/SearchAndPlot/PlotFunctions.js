@@ -17,6 +17,8 @@ var facet_plot = function(measurement_data, element_selector)
     // Stop if the measurement_data is empty
     if (measurement_data.length == 0) {return;}
 
+    measurement_data = sortTimePoints(measurement_data);
+
     // Get details about the plot, essentially, derived variables
     var plotDetails = returnPlotDetailsObject(measurement_data, svg);
 
@@ -38,6 +40,17 @@ var facet_plot = function(measurement_data, element_selector)
 //     console.log(plotDetails);
 //     console.log(plotObject);
 
+}
+
+var sortTimePoints = function(measurement_data) {
+    measurement_data = measurement_data.map(function(record) {
+        record.measurements.sort(function(a, b) {
+            if (a.time < b.time) {return(-1);}
+            if (a.time > b.time) {return(1);}
+            return(0);})
+        return(record);
+    });
+    return(measurement_data);
 }
 
 // Returns a function that returns ggplot2 like colours. The maximum number of
