@@ -1,10 +1,25 @@
 from pymongo import MongoClient
 import os
 import yaml
+import sys
+import time
+
+dump_threshold = 10000
+
+last_time = time.time()
 
 measurements_dict = {}
 search_terms_dict = {}
 facet_dict = {}
+
+mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
+
+# Create the time series database
+mungo_client.drop_database('time_series')
+db = mungo_client['time_series']
+
+# Create the measurements collection
+measurements_collection = db['measurements']
 
 time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'time_series_data.tsv')
@@ -30,19 +45,21 @@ if os.path.isfile(time_series_data_path):
                 'term_type': 'direct'}
             for idx in range(5, len(line)):
                 facet_dict[headers[idx]].add(line[idx])
+            if len(measurements_dict) > dump_threshold:
+                current_time = time.time()
+                print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
+                last_time = current_time
+                for name in measurements_dict:
+                    measurements_collection.update(
+                        {'name': measurements_dict[name]['name']},
+                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
+                        True)
+                measurements_dict = {}
+                current_time = time.time()
+                print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
+                last_time = current_time
 else:
     print('Time series data does not exist')
-
-mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
-
-# Create the time series database
-mungo_client.drop_database('time_series')
-db = mungo_client['time_series']
-
-# Create the measurements collection
-measurements_collection = db['measurements']
-for document in measurements_dict.values():
-    measurements_collection.insert(document)
 
 # Create the search terms collection
 search_terms_collection = db['search_terms']
