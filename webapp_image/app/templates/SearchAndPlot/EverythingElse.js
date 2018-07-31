@@ -83,52 +83,6 @@ $(document).ready(function(){
     $('#ts_data_download').on('click', null, "{{ url_for('downloadtsdata') }}", send_checked_genes);
 })
 
-// Sets up slider
-$(document).ready(function(){
-    var slider = document.getElementById('slider-range');
-
-    noUiSlider.create(slider, {
-            start: [ 20, 90 ],
-            step: 1,
-            connect: true,
-            orientation: 'horizontal',
-            range: {
-                    'min': 20,
-                    'max': 90
-            },
-            pips: {
-                mode: 'positions',
-                values: [0, 14.29, 28.57, 42.86, 57.14, 71.43, 85.71, 100],
-                density: 4
-            }
-    });
-
-    slider.noUiSlider.on('slide', function() {
-        var accessions = plot_vars.accessions;
-        var tissues = plot_vars.tissues;
-        var min_time = slider.noUiSlider.get()[0];
-        var max_time = slider.noUiSlider.get()[1];
-        exp_data = remove_time_points_out_of_range(exp_data_original, min_time, max_time)
-        var flipped = false;
-//         if ($('#flip_axis')[0].checked) {
-//             flipped = true;}
-        var display_errors = false;
-        if ($('#error_bars')[0].checked) {
-            display_errors = true;}
-        if (flipped)
-        {
-            var rowLabels = accessions;
-            var colLabels = tissues;
-        } else {
-            var rowLabels = tissues;
-            var colLabels = accessions;
-        }
-        min_max_arrays_global = return_min_max_arrays(colLabels, rowLabels, exp_data, display_errors)
-        if ($('#search').hasClass('active')) {
-            plot_graph(flipped, display_errors, min_max_arrays_global);
-        };
-    });
-})
 
 
 // What to do when the window resizes

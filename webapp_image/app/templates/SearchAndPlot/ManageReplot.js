@@ -33,6 +33,9 @@ $(document).on("replot", function() {
                     }
                 }
             });
+            include = include && (
+                Math.min(...plot_vars.sliderRange) <= parsed_measurement.time &&
+                parsed_measurement.time <= Math.max(...plot_vars.sliderRange));
             if (include) {
                 filtered_measurements.push(parsed_measurement);
             }

@@ -11,6 +11,7 @@ last_time = time.time()
 measurements_dict = {}
 search_terms_dict = {}
 facet_dict = {}
+flags_dict = {}
 
 mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
 
@@ -23,6 +24,8 @@ measurements_collection = db['measurements']
 
 time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'time_series_data.tsv')
+
+flags_dict['timerange'] = [0.0, 0.0]
 
 if os.path.isfile(time_series_data_path):
     with open(time_series_data_path) as f:
@@ -45,6 +48,10 @@ if os.path.isfile(time_series_data_path):
                 'term_type': 'direct'}
             for idx in range(5, len(line)):
                 facet_dict[headers[idx]].add(line[idx])
+            if measurement_dict['time'] <= flags_dict['timerange'][0]:
+                flags_dict['timerange'][0] = measurement_dict['time']
+            if flags_dict['timerange'][1] <= measurement_dict['time']:
+                flags_dict['timerange'][1] = measurement_dict['time']
             if len(measurements_dict) > dump_threshold:
                 current_time = time.time()
                 print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
@@ -69,7 +76,7 @@ for document in search_terms_dict.values():
 # Create the flags YAML
 yaml_path = os.path.join(os.environ['YAML_LOCATION'], 'flags.yaml')
 facet_dict = {name: list(facet_dict[name]) for name in facet_dict}
-flags_dict = {'facets': facet_dict}
+flags_dict['facets'] = facet_dict
 yaml.dump(flags_dict, open(yaml_path, 'w'))
 
 print('Database filling complete')

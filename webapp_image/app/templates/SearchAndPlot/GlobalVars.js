@@ -23,6 +23,13 @@ plot_vars = {
     {% else %}
         facets: {},
     {% endif %}
+    {% if 'timerange' in flags.keys() %}
+        timeRange: {{ flags['timerange']|tojson }},
+        sliderRange: {{ flags['timerange']|tojson }},
+    {% else %}
+        timeRange: {},
+        sliderRange: {},
+    {% endif %}
     axisLabels: {
         x: 'Time (days)',
         y: 'Cufflinks FPKM'
