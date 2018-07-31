@@ -2,3 +2,4 @@ flask
 pymongo
 markdown
 pyyaml
+pdfkit

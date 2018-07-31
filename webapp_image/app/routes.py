@@ -7,7 +7,7 @@ import yaml
 import os
 
 ## imports required to allow the user to download the graph as a PDF
-#import pdfkit
+import pdfkit
 
 ## imports required for blast search
 #import subprocess
@@ -130,26 +130,19 @@ def autocomplete():
 
 @app.route('/downloadpdf', methods=['POST'])
 def downloadpdf():
-    return()
-    #svg_string = request.form['svg']
-
+    svg_string = request.form['svg']
     ## yet another joke!
-    #svg_string = re.sub('<svg width="[0-9]+" height="[0-9]+">',
-                        #'<svg width="800" height="800">', svg_string)
-
-    #options = {'page-height': '200mm',
-               #'page-width': '200mm',
-               #'margin-top': '20mm'}
-
-    #pdf = pdfkit.from_string(svg_string,
-                             #False,
-                             #css=app.static_folder + '/css/plots.css',
-                             #options=options)
-
-    #response = make_response(pdf)
-    #response.headers['Content-Disposition'] = "attachment; filename=plot.pdf"
-    #response.mimetype = 'application/pdf'
-    #return response
+    svg_string = re.sub('<svg width="[0-9]+" height="[0-9]+">',
+                        '<svg width="800" height="800">', svg_string)
+    options = {'page-height': '200mm',
+               'page-width': '200mm',
+               'margin-top': '20mm'}
+    pdf = pdfkit.from_string(svg_string, False,
+        css=app.static_folder + '/css/plots.css', options=options)
+    response = make_response(pdf)
+    response.headers['Content-Disposition'] = "attachment; filename=plot.pdf"
+    response.mimetype = 'application/pdf'
+    return(response)
 
 @app.route('/downloadfasta', methods=['POST'])
 def downloadfasta():
@@ -175,39 +168,19 @@ def downloadfasta():
 
 @app.route('/downloadtsdata', methods=['POST'])
 def downloadtsdata():
-    return()
-    #db = mungo_client['darmor']
-    #exp_collection = db['ts_data']
-    #checked_genes = list(set(request.form['checked_genes_element'].split(',')))
-    #search_results = []
-    #for gene_name in checked_genes:
-        #search_results += [res for res in exp_collection.find(
-            #{
-                #'gene': gene_name
-            #}
-        #)]
-    #response_string = '\t'.join(['gene',
-                                 #'variety',
-                                 #'tissue',
-                                 #'time',
-                                 #'value',
-                                 #'type']) + '\n'
-    #for res in search_results:
-        #for acc in ['tapidor', 'westar']:
-            #for tis in ['leaf', 'apex']:
-                #for measurement in res[acc][tis]:
-                    #for val_type in ['fpkm', 'hi', 'lo']:
-                        #response_string += '\t'.join(str(i) for i in
-                                                     #[res['gene'],
-                                                      #acc,
-                                                      #tis,
-                                                      #measurement['time'],
-                                                      #measurement[val_type],
-                                                      #val_type]) + '\n'
-    #response = make_response(response_string)
-    #response.headers['Content-Disposition'] = (
-        #'attachment; filename=time_series_data.tsv')
-    #return response
+    checked_genes = list(set(request.form['checked_genes_element'].split(',')))
+    measurement_data = get_measurement_data(checked_genes)
+    flags = get_flags()
+    headers = ['name', 'time', 'value', 'hi', 'lo'] + flags['facets'].keys()
+    response_string = '\t'.join(headers) + '\n'
+    for record in measurement_data:
+        for measurement in record['measurements']:
+            response_string += '\t'.join(str(i) for i in [record['name']] +
+                [measurement[key] for key in headers[1:]]) + '\n'
+    response = make_response(response_string)
+    response.headers['Content-Disposition'] = (
+        'attachment; filename=time_series_data.tsv')
+    return(response)
 
 #def returnBrassicaGeneLabelType(agi, agiQuery):
     #classLabel = 'default'

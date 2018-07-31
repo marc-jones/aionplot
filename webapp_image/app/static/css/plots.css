@@ -32,6 +32,16 @@ p {
     fill: #7f7f7f;
 }
 
+.facetlabel text {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.axislabel text {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.legend text {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
 .facetlabel rect {
         fill: #cccccc;
 }
