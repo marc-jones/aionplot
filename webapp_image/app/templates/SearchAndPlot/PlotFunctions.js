@@ -473,7 +473,7 @@ var addLegend = function(plotDetails, svgD3Selection)
     recordLegendKeys.on('mouseover', function(name) {
 
         d3.selectAll('.record').filter(function(d) {
-            return(d.name != name);}).selectAll('path').transition()
+            return(d.name != name);}).selectAll('*').transition()
             .duration(300).style('opacity', 0.1);
 
         var selectedGeneNodes = d3.selectAll('.record').filter(function(d) {
@@ -487,7 +487,7 @@ var addLegend = function(plotDetails, svgD3Selection)
     recordLegendKeys.on('mouseout', function(name) {
 
         d3.selectAll('.record').filter(function(d) {
-            return(d == undefined || d.name != name);}).selectAll('path')
+            return(d == undefined || d.name != name);}).selectAll('*')
             .transition()
             .duration(300)
             .style('opacity', 1);
