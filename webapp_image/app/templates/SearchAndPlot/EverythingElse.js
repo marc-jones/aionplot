@@ -110,8 +110,8 @@ $(document).ready(function(){
         var max_time = slider.noUiSlider.get()[1];
         exp_data = remove_time_points_out_of_range(exp_data_original, min_time, max_time)
         var flipped = false;
-        if ($('#flip_axis')[0].checked) {
-            flipped = true;}
+//         if ($('#flip_axis')[0].checked) {
+//             flipped = true;}
         var display_errors = false;
         if ($('#error_bars')[0].checked) {
             display_errors = true;}
@@ -135,8 +135,8 @@ $(document).ready(function(){
 $(window).on('resize', function() {
     formatTitle();
     var flipped = false;
-    if ($('#flip_axis')[0].checked) {
-        flipped = true;}
+//     if ($('#flip_axis')[0].checked) {
+//         flipped = true;}
     var display_errors = false;
     if ($('#error_bars')[0].checked) {
         display_errors = true;}

@@ -10,6 +10,11 @@ $(document).on("change", "input[type='checkbox']", function() {
             }
         }
     });
+    if ($('#error_bars')[0].checked) {
+        plot_vars.displayErrors = true;
+    } else {
+        plot_vars.displayErrors = false;
+    }
     $.ajax({url: "{{ url_for('postcheckboxchange') }}" + "?names=" + selected_names}).done(
         function (new_measurement_data) {
             measurement_data = new_measurement_data;

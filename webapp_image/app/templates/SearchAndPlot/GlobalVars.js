@@ -26,7 +26,8 @@ plot_vars = {
     axisLabels: {
         x: 'Time (days)',
         y: 'Cufflinks FPKM'
-    }
+    },
+    displayErrors: false
 }
 
 measurement_data = {}

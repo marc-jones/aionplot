@@ -135,10 +135,20 @@ var returnPlotObject = function(measurement_data, plotDetails)
     var returnArray = [];
     for (rowIdx = 0; rowIdx < plotDetails.rowLabels.length; rowIdx++)
     {
-        var rowValues = [].concat(...measurement_data.map(function(record) {
-            return(record.measurements.filter(function(measurement) {
-            return(measurement.row_facet == plotDetails.rowLabels[rowIdx]);
-            }).map(function(measurement) {return(measurement.value);}));}));
+        var rowValues = [];
+        if (plot_vars.displayErrors) {
+            rowValues = [].concat(...[].concat(...measurement_data.map(
+                function(record) {return(record.measurements.filter(
+                function(measurement) {return(
+                measurement.row_facet == plotDetails.rowLabels[rowIdx]);
+                }).map(function(measurement) {
+                return([measurement.hi, measurement.lo]);}));})));
+        } else {
+            rowValues = [].concat(...measurement_data.map(function(record) {
+                return(record.measurements.filter(function(measurement) {
+                return(measurement.row_facet == plotDetails.rowLabels[rowIdx]);
+                }).map(function(measurement) {return(measurement.value);}));}));
+        }
         for (colIdx = 0; colIdx < plotDetails.colLabels.length; colIdx++)
         {
             var colTimes = [].concat(...measurement_data.map(function(record) {
@@ -361,6 +371,40 @@ var addRecords = function(plotDetails, plotsD3Selection)
                 return(plotData.yScaleFunc(measurement.value));});
         return(lineFunc(d.measurements));}).attr('fill', 'none');
 
+    if (plot_vars.displayErrors) {
+        recordSelection.selectAll('line').filter('.errorBar')
+            .data(function(d) {return(d.measurements);}).enter().append('line')
+            .each(function(d) {
+                var plotData = d3.select(this.parentNode.parentNode).datum();
+                d3.select(this).attr('x1', plotData.xScaleFunc(d.time))
+                    .attr('x2', plotData.xScaleFunc(d.time))
+                    .attr('y1', plotData.yScaleFunc(d.hi))
+                    .attr('y2', plotData.yScaleFunc(d.lo));
+            }).classed('errorBar', true);
+        recordSelection.selectAll('line').filter('.errorTop')
+            .data(function(d) {return(d.measurements);}).enter().append('line')
+            .each(function(d) {
+                var plotData = d3.select(this.parentNode.parentNode).datum();
+                d3.select(this).attr('x1', plotData.xScaleFunc(d.time) -
+                        (plot_vars.errorBarEndLength / 2))
+                    .attr('x2', plotData.xScaleFunc(d.time) +
+                        (plot_vars.errorBarEndLength / 2))
+                    .attr('y1', plotData.yScaleFunc(d.hi))
+                    .attr('y2', plotData.yScaleFunc(d.hi));
+            }).classed('errorTop', true);
+        recordSelection.selectAll('line').filter('.errorBottom')
+            .data(function(d) {return(d.measurements);}).enter().append('line')
+            .each(function(d) {
+                var plotData = d3.select(this.parentNode.parentNode).datum();
+                d3.select(this).attr('x1', plotData.xScaleFunc(d.time) -
+                        (plot_vars.errorBarEndLength / 2))
+                    .attr('x2', plotData.xScaleFunc(d.time) +
+                        (plot_vars.errorBarEndLength / 2))
+                    .attr('y1', plotData.yScaleFunc(d.lo))
+                    .attr('y2', plotData.yScaleFunc(d.lo));
+            }).classed('errorBottom', true);
+    }
+
     recordSelection.each(function(d, i) {
         var currentRecord = d3.select(this);
         var totalRecordNumber = plotDetails.legendLabels.length;
@@ -368,6 +412,7 @@ var addRecords = function(plotDetails, plotsD3Selection)
             totalRecordNumber);
         currentRecord.selectAll('path').filter('.point').attr('fill', colour);
         currentRecord.selectAll('path').filter('.line').attr('stroke', colour);
+        currentRecord.selectAll('line[class^=error]').attr('stroke', colour);
     });
 }
 
