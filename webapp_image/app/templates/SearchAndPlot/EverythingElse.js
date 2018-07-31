@@ -151,123 +151,6 @@ var formatChildRow = function(expression_data, row) {
     }
 }
 
-var return_plot_order = function(colLabels, rowLabels, margin, min_max_arrays,
-    plotWidth, plotHeight, flipped) {
-    var return_array = [];
-    for (row_idx = 0; row_idx < rowLabels.length; row_idx++) {
-        for (col_idx = 0; col_idx < colLabels.length; col_idx++) {
-            if (flipped) {
-                var acc = rowLabels[row_idx];
-                var tis = colLabels[col_idx];}
-            else {
-                var tis = rowLabels[row_idx];
-                var acc = colLabels[col_idx];}
-            var x_val = margin.left + col_idx * (plotWidth + margin.spacing);
-            var y_val = margin.top + row_idx * (plotHeight + margin.spacing);
-            var xScale = d3.scale.linear()
-                .domain([min_max_arrays.minTimes[col_idx],
-                    min_max_arrays.maxTimes[col_idx]])
-                .range([x_val, x_val+plotWidth])
-                .nice();
-            var yScale = d3.scale.linear()
-                .domain([min_max_arrays.minFPKMs[row_idx],
-                    min_max_arrays.maxFPKMs[row_idx]])
-                .range([y_val+plotHeight, y_val])
-                .nice();
-            return_array.push({plotRow:row_idx, plotCol:col_idx, x:x_val,
-                y:y_val, xScale:xScale, yScale:yScale, accession:acc,
-                tissue:tis});}}
-    return(return_array);}
-
-var return_min_max_arrays = function(colLabels, rowLabels, exp_data,
-                                     display_errors) {
-    // The following sections goes through the data and collects the minimum and
-    // maximum times and FPKMs for each column and row respectively. Because of
-    // the doubled nested nature of the data, this requires two loops twice and
-    // is a bloody mess.this could potentially be alleviated by using a
-    // different data structure.
-    var minTimes = [];
-    var maxTimes = [];
-    for (col_idx = 0; col_idx < colLabels.length; col_idx++) {
-        var times = [];
-        var measurement_min_maxes = exp_data.forEach(function(gene) {
-            var filtered_times = gene['measurements']
-                .filter(function(measurement) {
-                    return(measurement['accession'] == colLabels[col_idx] ||
-                        measurement['tissue'] == colLabels[col_idx]);
-                })
-                .map(function(measurement) {
-                    return(measurement.time);
-                });
-            times = times.concat(filtered_times);
-        });
-        minTimes.push(d3.min(times));
-        maxTimes.push(d3.max(times));
-    };
-    var minFPKMs = [];
-    var maxFPKMs = [];
-    for (row_idx = 0; row_idx < rowLabels.length; row_idx++) {
-        var fpkms = [];
-        var measurement_min_maxes = exp_data.map(function(gene) {
-            var filtered_fpkms = gene['measurements']
-                .filter(function(measurement) {
-                    return(measurement['accession'] == rowLabels[row_idx] ||
-                    measurement['tissue'] == rowLabels[row_idx]);
-                })
-                .map(function(measurement) {
-                    if (display_errors) {
-                        return([measurement.hi, measurement.lo]);
-                    } else {
-                        return([measurement.fpkm]);
-                    };
-                });
-            fpkms = fpkms.concat([].concat.apply([], filtered_fpkms));
-        });
-        minFPKMs.push(d3.min(fpkms));
-        maxFPKMs.push(d3.max(fpkms));
-    };
-    return({minTimes: minTimes, maxTimes: maxTimes, minFPKMs: minFPKMs,
-        maxFPKMs: maxFPKMs});
-};
-
-var returnMinorMajorTicks = function(axis, originalTickNum) {
-    var majorTicks = axis.ticks(originalTickNum);
-    var tickSeparation = majorTicks[1]-majorTicks[0]
-    var returnArray = [];
-    for (i = 0; i < (majorTicks.length-1); i++) {
-        returnArray.push(majorTicks[i]);
-        returnArray.push(majorTicks[i] + tickSeparation/2);}
-    returnArray.push(majorTicks[majorTicks.length-1])
-    if ((axis.domain()[0] < majorTicks[0]) && (axis.domain()[0] <
-        returnArray[0]-tickSeparation/2)) {
-        returnArray.unshift(returnArray[0]-tickSeparation/2);}
-    else if ((axis.domain()[0] > majorTicks[0]) && (axis.domain()[0] >
-        returnArray[0]-tickSeparation/2)) {
-        returnArray.unshift(returnArray[0]-tickSeparation/2);}
-    if ((majorTicks[majorTicks.length-1] < axis.domain()[1]) &&
-        (returnArray[returnArray.length-1]+tickSeparation/2 <
-        axis.domain()[1])) {
-        returnArray.push(returnArray[returnArray.length-1]+tickSeparation/2);}
-    else if ((majorTicks[majorTicks.length-1] > axis.domain()[1]) &&
-        (returnArray[returnArray.length-1]+tickSeparation/2 >
-        axis.domain()[1])) {
-        returnArray.push(returnArray[returnArray.length-1]+tickSeparation/2);}
-    return(returnArray);}
-
-var remove_time_points_out_of_range = function(passed_exp_data, min_time,
-                                               max_time) {
-    var return_array = [];
-    passed_exp_data.forEach(function(gene_object) {
-        var gene_object_copy = jQuery.extend(true, {}, gene_object);
-        gene_object_copy['measurements'] =
-            gene_object_copy['measurements'].filter(function(time_point) {
-                return(time_point.time >= min_time &&
-                    time_point.time <= max_time);
-            });
-        return_array.push(gene_object_copy);
-    });
-    return(return_array);}
-
 var plot_graph = function(flipped, display_errors, min_max_arrays) {
     var aspect_ratio = plot_vars.aspect_ratio;
     var mobile_aspect_ratio = plot_vars.mobile_aspect_ratio;
@@ -282,44 +165,8 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
 
     // flipped is a variable which changes the axes
     // assigned to tissues or accessions
-    if (flipped)
-    {
-        var rowLabels = accessions;
-        var colLabels = tissues;
-    } else {
-        var rowLabels = tissues;
-        var colLabels = accessions;
-    }
-
-
     // svg checkbox - http://jsperf.com/svg-checkbox-vs-html-checkbox
     // A great tutorial on responsive graphs - http://goo.gl/kBViYN
-    var svgWidth = parseInt(d3.select('#result_graph').style('width'), 10);
-
-    if (svgWidth < mobile_cut_offs['min']) {
-        var svgHeight = parseInt(svgWidth / mobile_aspect_ratio, 10);
-    } else if (mobile_cut_offs['min'] <= svgWidth && svgWidth < mobile_cut_offs['max'] ) {
-        var m = (aspect_ratio - mobile_aspect_ratio) /
-        (mobile_cut_offs['max'] - mobile_cut_offs['min']);
-        var c = aspect_ratio - (m * mobile_cut_offs['max']);
-        var y = m * svgWidth + c;
-        var svgHeight = parseInt(svgWidth / y, 10);
-    } else {
-        var svgHeight = parseInt(svgWidth / aspect_ratio, 10);
-    }
-
-    var svg = d3.select('#result_graph')
-                .select("svg")
-                .attr("width", svgWidth)
-                .attr("height", svgHeight);
-
-    // create the colour function
-    var hues = Array.apply(0, Array(exp_data.length)).map(
-        function (x, y) {
-            return(y*(360/exp_data.length) + 15);});
-    var getColour = function(i) {
-        return hcl2rgb(hues[i], 100, 65);}
-
     if (exp_data.length > 0) {
 
         // clear everything in the svg
@@ -337,19 +184,6 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
                             .concat(unique_homology)
                             .concat(['Vernalization']);
 
-        var maxLegendLabelWidth = 0.0;
-
-        var texts = svg.selectAll('text')
-                        .data(legend_labels)
-                        .enter()
-                        .append('text')
-                        .text(function(d) {return d;})
-                        .each(function() {if (Math.ceil(this.getComputedTextLength()) > maxLegendLabelWidth)
-                                        {maxLegendLabelWidth = Math.ceil(this.getComputedTextLength());}});
-
-        // clear everything in the svg
-        svg.selectAll('*').remove();
-
         var legendColumns = Math.floor( (svgWidth * legendWidthProportion) / (margin.legendline+margin.spacing*2+maxLegendLabelWidth) );
 
         var legendNumberOfLines = Math.ceil(unique_homology.length / legendColumns) + Math.ceil(exp_data.length / legendColumns) + 1;
@@ -363,25 +197,7 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
         // each facet plot; which row and column it is in in the facet plot,
         // the top left corner coordinate, the scale constructs as well as
         // the tissue and accession labels
-        var plotOrder = return_plot_order(colLabels, rowLabels, margin, min_max_arrays, plotWidth, plotHeight, flipped)
 
-        // clear everything in the svg
-        svg.selectAll('*').remove();
-
-        // add a group for each plot
-        var individualPlots = svg.selectAll('g')
-            .data(plotOrder)
-            .enter()
-            .append('g')
-            .attr('accession', function(d) {return d.accession;})
-            .attr('tissue', function(d) {return d.tissue;});
-        // add the plot background
-        individualPlots.append('rect')
-            .attr('x', function(d) { return d.x;})
-            .attr('y', function(d) { return d.y;})
-            .attr('width', plotWidth)
-            .attr('height', plotHeight)
-            .attr('class', 'plotbackground');
         // add the vernalization region
         individualPlots.append('rect')
             .filter(function(d) { return d.xScale.domain()[0] < 64;})
@@ -391,142 +207,8 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
             .attr('height', plotHeight)
             .attr('class', 'vernalization');
 
-        // add axis, labels and gridlines for each plot
-        plotOrder.forEach(function(plot_data, plot_idx) {
-            var yAxis = d3.svg.axis()
-                .scale(plot_data.yScale)
-                .orient("left")
-                .ticks(tickNum);
-            var xAxis = d3.svg.axis()
-                .scale(plot_data.xScale)
-                .orient("bottom")
-                .ticks(tickNum);
-
-            // if the plot is in the left most column, add an axis
-            if (plot_data.plotCol == 0) {
-                svg.append("g")
-                    .attr("class", "axis")
-                    .attr("transform", "translate(" + margin.left + ",0)")
-                    .call(yAxis);}
-
-            // if the plot is in the top row, add a label
-            if (plot_data.plotRow == 0) {
-                var label_group = svg.append("g")
-                    .attr("class", 'facetlabel')
-
-                label_group.append('rect')
-                    .attr('x', plot_data.x)
-                    .attr('y', plot_data.y-margin.top)
-                    .attr('width', plotWidth)
-                    .attr('height', margin.top);
-                label_group.append('text')
-                    .attr('x', plot_data.x + (plotWidth/2))
-                    .attr('y', plot_data.y - (margin.top/2))
-                    .attr("text-anchor", "middle")
-                    .text(capitalizeFirstLetter(colLabels[plot_data.plotCol]));}
-
-            // if the plot is in the bottom row, add an axis
-            if (plot_data.plotRow == (rowLabels.length-1)) {
-                svg.append("g")
-                    .attr("class", "axis")
-                    .attr("transform", "translate(0," + (svgHeight -
-                        margin.bottom - (margin.legendline +
-                        margin.spacing)*legendNumberOfLines) + ")")
-                    .call(xAxis);}
-
-            // if the plot is in the right most column, add a label
-            if (plot_data.plotCol == (colLabels.length-1)) {
-                var label_group = svg.append("g")
-                    .attr("class", 'facetlabel')
-                label_group.append('rect')
-                    .attr('x', plot_data.x+plotWidth)
-                    .attr('y', plot_data.y)
-                    .attr('width', margin.right)
-                    .attr('height', plotHeight);
-                var textX = plot_data.x + plotWidth + (margin.right/2);
-                var textY = plot_data.y + (plotHeight/2);
-                label_group.append('text')
-                    .attr('x', textX)
-                    .attr('y', textY)
-                    .attr("text-anchor", "middle")
-                    .text(capitalizeFirstLetter(rowLabels[plot_data.plotRow]))
-                    .attr("transform", "rotate(90,"+(plot_data.x +
-                        plotWidth + (margin.right/2))+","+(plot_data.y +
-                        (plotHeight/2))+")");}
-
-            var currentPlot = d3.select(individualPlots[0][plot_idx]);
-
-            var gridLines = currentPlot.append("g")
-                .classed('grid', true);
-
-            var verticalGridLines = gridLines.append("g")
-                .classed('vertical', true);
-
-            verticalGridLines.selectAll('line')
-                .data(plot_data.xScale.ticks(tickNum),
-                    function(d) {return d;})
-                .enter()
-                .append("line")
-                .classed("major", true)
-                .attr("y1", plot_data.y)
-                .attr("y2", plot_data.y + plotHeight)
-                .attr("x1", plot_data.xScale)
-                .attr("x2", plot_data.xScale);
-
-            verticalGridLines.selectAll('line')
-                .data(returnMinorMajorTicks(plot_data.xScale, tickNum),
-                    function(d) {return d;})
-                .enter()
-                .append("line")
-                .classed("minor", true)
-                .attr("y1", plot_data.y)
-                .attr("y2", plot_data.y + plotHeight)
-                .attr("x1", plot_data.xScale)
-                .attr("x2", plot_data.xScale);
-
-            // add the horizontal gridlines. The filter is a huge
-            // hack which stops the previous vertical lines from being
-            // included in the selection
-            var horizontalGridLines =  gridLines.append("g")
-                .classed('horizontal', true);
-
-            horizontalGridLines.selectAll('line')
-                .data(plot_data.yScale.ticks(tickNum),
-                    function(d) {return d;})
-                .enter()
-                .append("line")
-                .classed("major", true)
-                .attr("y1", plot_data.yScale)
-                .attr("y2", plot_data.yScale)
-                .attr("x1", plot_data.x)
-                .attr("x2", plot_data.x + plotWidth);
-
-
-            horizontalGridLines.selectAll('line')
-                .data(returnMinorMajorTicks(plot_data.yScale, tickNum),
-                    function(d) { return d; })
-                .enter()
-                .append("line")
-                .classed("minor", true)
-                .attr("y1", plot_data.yScale)
-                .attr("y2", plot_data.yScale)
-                .attr("x1", plot_data.x)
-                .attr("x2", plot_data.x + plotWidth);});
-
-        // removes the axis lines
-        d3.selectAll('path.domain').remove()
-
         // For each plot, add points and lines for each gene
         individualPlots.each(function(plot_data, i) {
-            var genes = d3.select(this)
-                .selectAll('g')
-                .filter(function(d) {return false;})
-                .data(exp_data)
-                .enter()
-                .append('g')
-                .attr('gene', function(gene){return gene.gene;})
-                .attr('class', 'gene');
-
             var symbols = d3.svg.symbol()
                 .size(symbolSize)
                 .type(function(d, i) {
@@ -554,153 +236,7 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
                 .attr("d", symbols)
                 .classed("point", true);
 
-
-            var lineFunc = d3.svg.line()
-                .x(function(d2) {
-                    return(plot_data.xScale(d2.time));})
-                .y(function(d2) {
-                    return(plot_data.yScale(d2.fpkm));});
-
-            genes.append('path')
-                .attr("class", "line")
-                .attr("d", function(gene) {
-                    var returnVal = gene['measurements']
-                        .filter(function(measurement) {return(
-                            measurement['accession'] == plot_data.accession &&
-                            measurement['tissue'] == plot_data.tissue);});
-                    return(lineFunc(returnVal));})
-                .attr("fill", "none")
-                .classed("line", true);
-
-            if (display_errors) {
-                var error_bars = genes.append('g')
-                    .attr('class', 'error_bar')
-                    .selectAll('line')
-                    .data(function(gene) {
-                        return(gene['measurements']
-                        .filter(function(measurement) {return(
-                            measurement['accession'] == plot_data.accession &&
-                            measurement['tissue'] == plot_data.tissue);}));});
-                error_bars.enter()
-                    .append('line')
-                    .attr('x1', function(point) {
-                        return(plot_data.xScale(point.time))})
-                    .attr('y1', function(point) {
-                        return(plot_data.yScale(point.hi))})
-                    .attr('x2', function(point) {
-                        return(plot_data.xScale(point.time))})
-                    .attr('y2', function(point) {
-                        return(plot_data.yScale(point.lo))});
-
-                error_bars.enter()
-                    .append('line')
-                    .attr('x1', function(point) {
-                        return(plot_data.xScale(point.time) -
-                            (errorBarEndLength/2))})
-                    .attr('y1', function(point) {
-                        return(plot_data.yScale(point.hi))})
-                    .attr('x2', function(point) {
-                        return(plot_data.xScale(point.time) +
-                            (errorBarEndLength/2))})
-                    .attr('y2', function(point) {
-                        return(plot_data.yScale(point.hi))});
-
-                error_bars.enter()
-                    .append('line')
-                    .attr('x1', function(point) {
-                        return(plot_data.xScale(point.time) -
-                            (errorBarEndLength/2))})
-                    .attr('y1', function(point) {
-                        return(plot_data.yScale(point.lo))})
-                    .attr('x2', function(point) {
-                        return(plot_data.xScale(point.time) +
-                            (errorBarEndLength/2))})
-                    .attr('y2', function(point) {
-                        return(plot_data.yScale(point.lo))});}
-
-            genes.each(function(d, i) {
-                var currentGene = d3.select(this)
-                currentGene.attr('defaultcolour', getColour(i));
-                currentGene.selectAll('path').filter('.point')
-                    .attr('fill', getColour(i));
-                currentGene.selectAll('path').filter('.line')
-                    .attr('stroke', getColour(i));
-                currentGene.selectAll('line')
-                    .attr('stroke', getColour(i));});});
-
-        // add axis labels
-        svg.append('g')
-            .attr('class', 'axislabel')
-            .append('text')
-            .attr('x',
-                  margin.left + (svgWidth - margin.left - margin.right) / 2)
-            .attr('y', svgHeight - (margin.bottom / 4) - (margin.legendline +
-                  margin.spacing) * legendNumberOfLines)
-            .attr("text-anchor", "middle")
-            .text('Time (days)');
-        svg.append('g')
-            .attr('class', 'axislabel')
-            .append('text')
-            .attr('transform',
-                  'translate(' +
-                  (margin.left / 4) + ',' +
-                  (margin.top + (svgHeight - margin.top - margin.bottom -
-                    (margin.legendline + margin.spacing) *
-                    legendNumberOfLines) / 2) +
-                  ')rotate(-90)')
-            .attr("text-anchor", "middle")
-            .text('Cufflinks FPKM');
-
-        // legend code
-        var legend = svg.append('g')
-            .attr('class', 'legend');
-
-        // add all the genes
-        var geneLegend = legend.selectAll('g')
-            .data(exp_data)
-            .enter()
-            .append('g')
-            .attr('gene', function(gene) {
-                return gene.gene;})
-            .attr('class', 'key');
-
-        var legendRects = geneLegend.append('rect')
-            .attr('x', function(d, i) {
-                while (i >= legendColumns) {
-                    i = i - legendColumns;}
-                return(svgWidth*((1-legendWidthProportion)/2) +
-                    (margin.legendline + margin.spacing*2 +
-                    maxLegendLabelWidth)*i);})
-            .attr('y', function(d, i) {
-                var n = 0;
-                while (i >= legendColumns) {
-                    i = i - legendColumns;
-                    n = n + 1;}
-                return(svgHeight - (margin.legendline + margin.spacing)*
-                    (legendNumberOfLines-n));})
-            .attr('width', margin.legendline)
-            .attr('height', margin.legendline)
-            .attr('class', 'plotbackground');
-
-        geneLegend.append('circle')
-                .attr('cx', function(d, i) {while (i >= legendColumns) {i = i - legendColumns;}
-                                            return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i + (margin.legendline*0.5);})
-                .attr('cy', function(d, i) {var n = 0;
-                                                while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                                return svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n)  + (margin.legendline*0.5);});
-
-        geneLegend.append('line')
-                .attr("y1", function(d, i) {var n = 0;
-                                                while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                                return svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n)  + (margin.legendline*0.5);})
-                .attr("y2", function(d, i) {var n = 0;
-                                                while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                                return svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n)  + (margin.legendline*0.5);})
-                .attr("x1", function(d, i) {while (i >= legendColumns) {i = i - legendColumns;}
-                                            return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i;})
-                .attr("x2", function(d, i) {while (i >= legendColumns) {i = i - legendColumns;}
-                                            return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i + margin.legendline;});
-
+        });
         var circle_dummy = d3.select('body')
             .append('div')
             .attr('class', 'ie_circle_radius')
@@ -717,15 +253,6 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
 
         circle_dummy.remove();
 
-        geneLegend.append('text')
-                .text(function(d) {return d.gene;})
-                .attr("text-anchor", "middle")
-                .attr('x', function(d, i) {while (i >= legendColumns) {i = i - legendColumns;}
-                                            return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i + margin.legendline + margin.spacing + Math.ceil(this.getComputedTextLength())/2})
-                .attr('y', function(d, i) {var n = 0;
-                                            while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                            return svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n)  + (margin.legendline*0.75);});
-
         geneLegend.each(function(){
                 var bbox = this.getBBox();
                 d3.select(this).append('rect')
@@ -739,55 +266,6 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
                                 .attr('height', function() {return bbox.height;});});
 
         $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-
-        geneLegend.on("mouseover",function() {
-                            var transition = d3.select('body')
-                                            .append('div')
-                                            .attr('class', 'gene_transition')
-                                            .style('display', 'none');
-
-                            var selectedLegend = d3.select(this);
-                            var selectedGenes = d3.selectAll('.gene')
-                                                .filter(function(d) {return selectedLegend.attr('gene') == d3.select(this).attr('gene')});
-                            var allOtherGenes = d3.selectAll('.gene')
-                                                .filter(function(d) {return selectedLegend.attr('gene') != d3.select(this).attr('gene')})
-                                                .selectAll('path')
-                                                .transition()
-                                                .duration(300)
-                                                .style('opacity', transition.style('opacity'));
-//                                                       .classed('notselected', true);
-                            // http://stackoverflow.com/a/27443487
-                            selectedGenes.each(function(){
-                                var clone = d3.select(this.parentNode).node().appendChild(this.cloneNode(true));
-                                d3.select(clone).classed('temp', true);
-                            });
-
-                            transition.remove();
-                        });
-
-        geneLegend.on('mouseout', function() {
-                            var transition = d3.select('body')
-                                            .append('div')
-                                            .attr('class', 'gene_transition')
-                                            .style('display', 'none');
-
-                            var tempGene = d3.selectAll('.temp');
-
-                            var selectedLegend = d3.select(this);
-                            var allOtherGenes = d3.selectAll('.gene')
-                                                .filter(function(d) {return selectedLegend.attr('gene') != d3.select(this).attr('gene')})
-                                                .selectAll('path')
-                                                .transition()
-                                                .duration(300)
-                                                .style('opacity', tempGene.style('opacity'));
-//                                                       .classed('notselected', false);
-                            tempGene.remove();
-
-                            transition.remove();
-
-                        });
-
-
 
 
         // add the arabidopsis agi codes
@@ -849,6 +327,8 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
                 .text(function(d) {return d;})
                 .attr("text-anchor", "middle")
                 .attr('x', function(d, i) {return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i + margin.legendline + margin.spacing + Math.ceil(this.getComputedTextLength())/2})
-                .attr('y', function(d, i) {return svgHeight - (margin.legendline + margin.spacing)  + (margin.legendline*0.75);});}
-    else {
-        svg.selectAll('*').remove();}}
+                .attr('y', function(d, i) {return svgHeight - (margin.legendline + margin.spacing)  + (margin.legendline*0.75);});
+    } else {
+        svg.selectAll('*').remove();}
+
+}
