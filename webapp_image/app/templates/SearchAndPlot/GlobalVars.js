@@ -31,8 +31,8 @@ plot_vars = {
         sliderRange: {},
     {% endif %}
     axisLabels: {
-        x: 'Time (days)',
-        y: 'Cufflinks FPKM'
+        x: {{ flags['x_axis_label']|tojson }},
+        y: {{ flags['y_axis_label']|tojson }}
     },
     displayErrors: false
 }

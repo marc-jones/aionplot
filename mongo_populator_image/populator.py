@@ -25,7 +25,7 @@ measurements_collection = db['measurements']
 time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'time_series_data.tsv')
 
-flags_dict['timerange'] = [0.0, 0.0]
+flags_dict['timerange'] = [None, None]
 
 if os.path.isfile(time_series_data_path):
     with open(time_series_data_path) as f:
@@ -48,9 +48,11 @@ if os.path.isfile(time_series_data_path):
                 'term_type': 'direct'}
             for idx in range(5, len(line)):
                 facet_dict[headers[idx]].add(line[idx])
-            if measurement_dict['time'] <= flags_dict['timerange'][0]:
+            if (flags_dict['timerange'][0] == None or
+                measurement_dict['time'] <= flags_dict['timerange'][0]):
                 flags_dict['timerange'][0] = measurement_dict['time']
-            if flags_dict['timerange'][1] <= measurement_dict['time']:
+            if (flags_dict['timerange'][1] == None or
+                flags_dict['timerange'][1] <= measurement_dict['time']):
                 flags_dict['timerange'][1] = measurement_dict['time']
             if len(measurements_dict) > dump_threshold:
                 current_time = time.time()
@@ -65,8 +67,54 @@ if os.path.isfile(time_series_data_path):
                 current_time = time.time()
                 print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
                 last_time = current_time
+        current_time = time.time()
+        print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
+        last_time = current_time
+        for name in measurements_dict:
+            measurements_collection.update(
+                {'name': measurements_dict[name]['name']},
+                {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
+                True)
+        measurements_dict = {}
 else:
-    print('Time series data does not exist')
+    sys.exit('Time series data does not exist')
+
+
+website_info_path = os.path.join(os.environ['DATA_LOCATION'],
+    'website_information.yaml')
+website_info_defaults = {
+    'name': 'Time Series',
+    'short_name': 'TS',
+    'x_axis_label': 'Time',
+    'y_axis_label': 'Value'
+}
+if os.path.isfile(website_info_path):
+    website_info_dict = yaml.load(open(website_info_path))
+    for key in website_info_defaults.keys():
+        if not key in website_info_dict.keys():
+            website_info_dict[key] = website_info_defaults[key]
+else:
+    website_info_dict = website_info_defaults
+    print('Website information does not exist')
+
+for key in website_info_dict:
+    flags_dict[key] = website_info_dict[key]
+
+
+fasta_data_path = os.path.join(os.environ['DATA_LOCATION'],
+    'genes.fasta')
+if os.path.isfile(fasta_data_path):
+    flags_dict['fasta_available'] = True
+else:
+    flags_dict['fasta_available'] = False
+    print('FASTA file not found')
+
+groups_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
+if os.path.isfile(groups_data_path):
+    flags_dict['groups_available'] = True
+else:
+    flags_dict['groups_available'] = False
+    print('Groups file not found')
 
 # Create the search terms collection
 search_terms_collection = db['search_terms']

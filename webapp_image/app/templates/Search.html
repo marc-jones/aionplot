@@ -23,12 +23,14 @@
                         <button id='plot_download' type="button" class="btn btn-default download-btn">
                             <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download Plot
                         </button>
-                        <button id='fasta_download' type="button" class="btn btn-default download-btn">
-                            <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download FASTA
-                        </button>
                         <button id='ts_data_download' type="button" class="btn btn-default download-btn">
                             <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download Data
                         </button>
+                        {% if flags['fasta_available'] %}
+                        <button id='fasta_download' type="button" class="btn btn-default download-btn">
+                            <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span> Download FASTA
+                        </button>
+                        {% endif %}
                     </div>
                     <br>
                     <div id='transcript_checkboxes'></div>

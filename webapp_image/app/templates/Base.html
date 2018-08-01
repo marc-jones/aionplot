@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORDER: Oilseed Rape Developmental Expression Resource</title>
+    <title>{{ flags['name'] }}</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='content/favicon.ico') }}"/>
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
@@ -13,17 +13,6 @@
     <script type="text/javascript" src="{{ url_for('static', filename='js/nouislider.min.js') }}"></script>
     <script type="text/javascript">{{ searchandplotjs|safe }}</script>
     <script type="text/javascript" src="https://cdn.datatables.net/r/bs/dt-1.10.9,fh-3.0.0/datatables.min.js"></script>
-    <script type="text/javascript">
-        // An aesthetic thing which unselects the nav tabs when the brand is clicked
-        $(document).ready(function(){
-            $('a[href="#welcome"').click(function(){
-                $('a[data-toggle="tab"').each(function( index, listItem ) {
-                    $(listItem).parent().removeClass("active");
-                    $(listItem).attr("aria-expanded", "false");
-                });
-            });
-        })
-    </script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/selectize.bootstrap3.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/plots.css') }}">
@@ -41,7 +30,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a href="#welcome" data-toggle="tab" class="navbar-brand">ORDER: Oilseed Rape Developmental Expression Resource</a>
+                <a href="#welcome" data-toggle="tab" class="navbar-brand"></a>
             </div>
             <nav class="collapse navbar-collapse" role="navigation">
                 <ul class="nav navbar-nav">
@@ -54,12 +43,16 @@
                     <li>
                         <a href="#search" data-toggle="tab">Search</a>
                     </li>
+                    {% if flags['fasta_available'] %}
                     <li>
                         <a href="#blast" data-toggle="tab">BLAST Search</a>
                     </li>
+                    {% endif %}
+                    {% if flags['groups_available'] %}
                     <li>
                         <a href="#table" data-toggle="tab">Table</a>
                     </li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>
@@ -70,8 +63,12 @@
         <div class="tab-pane" id="about">{{ aboutPage|safe }}</div>
         <div class="tab-pane" id="howtouse">{{ howToUsePage|safe }}</div>
         <div class="tab-pane" id="search">{{ searchPage|safe }}</div>
+        {% if flags['fasta_available'] %}
         <div class="tab-pane" id="blast">{{ blastPage|safe }}</div>
+        {% endif %}
+        {% if flags['groups_available'] %}
         <div class="tab-pane" id="table">{{ tablePage|safe }}</div>
+        {% endif %}
     </div>
     <div class="device-xs visible-xs"></div>
     <div class="device-sm visible-sm"></div>

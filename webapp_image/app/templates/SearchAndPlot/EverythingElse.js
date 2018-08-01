@@ -1,13 +1,9 @@
 // Sets up the Download buttons
-$(document).ready(function(){
-    formatTitle();
-});
 
 
 
 // What to do when the window resizes
 $(window).on('resize', function() {
-    formatTitle();
     var flipped = false;
 //     if ($('#flip_axis')[0].checked) {
 //         flipped = true;}
@@ -27,14 +23,6 @@ $(window).on('resize', function() {
 var capitalizeFirstLetter = function(string) {
     return(string.charAt(0).toUpperCase() + string.slice(1));
 }
-
-var formatTitle = function() {
-    if ($('.device-sm').is(':visible') || $('.device-xs').is(':visible')) {
-        $('.navbar-brand')[0].innerHTML = 'ORDER';
-    } else {
-        $('.navbar-brand')[0].innerHTML = 'ORDER: Oilseed Rape Developmental Expression Resource';
-    };
-};
 
 var formatChildRow = function(expression_data, row) {
     var bngene_name = row.data().gene.replace(/<.+?>/g, '');

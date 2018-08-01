@@ -75,6 +75,7 @@ def get_flags():
 
 @app.route('/')
 def landing():
+    flags=get_flags()
     with app.open_resource('static/content/landing.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
     landingPage = render_template('Landing.html', content=content)
@@ -84,10 +85,9 @@ def landing():
     with app.open_resource('static/content/howtouse.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
     howToUsePage = render_template('HowToUse.html', content=content)
-    searchPage = render_template('Search.html')
+    searchPage = render_template('Search.html', flags=flags)
     blastPage = render_template('Blast.html')
     tablePage = render_template('Table.html')
-    flags=get_flags()
     searchandplotjs = render_template('SearchAndPlot.js', flags=flags)
     return(render_template('Base.html',
                            landingPage=landingPage,
@@ -96,7 +96,8 @@ def landing():
                            searchPage=searchPage,
                            blastPage=blastPage,
                            searchandplotjs=searchandplotjs,
-                           tablePage=tablePage))
+                           tablePage=tablePage,
+                           flags=flags))
 
 @app.route('/postsearch')
 def postsearch():
