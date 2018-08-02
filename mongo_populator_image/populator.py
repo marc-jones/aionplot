@@ -3,6 +3,7 @@ import os
 import yaml
 import sys
 import time
+import shutil
 
 dump_threshold = 10000
 
@@ -115,6 +116,15 @@ if os.path.isfile(groups_data_path):
 else:
     flags_dict['groups_available'] = False
     print('Groups file not found')
+
+
+user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
+    'user_content')
+if os.path.isdir(user_content_folder_path):
+    shutil.copytree(user_content_folder_path,
+        os.path.join(os.environ['CONTENT_LOCATION'], 'user_content'))
+else:
+    print('No user content, using defaults')
 
 # Create the search terms collection
 search_terms_collection = db['search_terms']

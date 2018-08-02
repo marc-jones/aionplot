@@ -1,5 +1,5 @@
 from flask import (Flask, url_for, request, render_template, jsonify, session,
-    make_response, Markup, render_template_string)
+    make_response, Markup, render_template_string, send_from_directory)
 from main import app, mungo_client
 import re
 import markdown
@@ -73,18 +73,41 @@ def get_flags():
         flags = {}
     return(flags)
 
+@app.route('/user_content/<path:filename>')
+def user_content(filename):
+    return(send_from_directory(os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content'), filename))
+
 @app.route('/')
 def landing():
     flags=get_flags()
-    with app.open_resource('static/content/landing.md') as f:
+    landing_markdown = 'static/content/landing.md'
+    user_landing_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content', 'landing.md')
+    if os.path.isfile(user_landing_markdown):
+        landing_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
+            'user_content', 'landing.md')
+    with app.open_resource(landing_markdown) as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
         content = render_template_string(content)
     landingPage = render_template('MarkdownBase.html', content=content)
-    with app.open_resource('static/content/about.md') as f:
+    about_markdown = 'static/content/about.md'
+    user_about_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content', 'about.md')
+    if os.path.isfile(user_about_markdown):
+        about_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
+            'user_content', 'about.md')
+    with app.open_resource(about_markdown) as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
         content = render_template_string(content)
     aboutPage = render_template('MarkdownBase.html', content=content)
-    with app.open_resource('static/content/howtouse.md') as f:
+    howtouse_markdown = 'static/content/howtouse.md'
+    user_howtouse_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content', 'howtouse.md')
+    if os.path.isfile(user_howtouse_markdown):
+        howtouse_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
+            'user_content', 'howtouse.md')
+    with app.open_resource(howtouse_markdown) as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
         content = render_template_string(content)
     howToUsePage = render_template('MarkdownBase.html', content=content)
@@ -92,6 +115,11 @@ def landing():
     blastPage = render_template('Blast.html')
     tablePage = render_template('Table.html')
     searchandplotjs = render_template('SearchAndPlot.js', flags=flags)
+    favicon_location = url_for('static', filename='content/favicon.ico')
+    user_favicon_location = os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content', 'favicon.ico')
+    if os.path.isfile(user_favicon_location):
+        favicon_location = url_for('user_content', filename='favicon.ico')
     return(render_template('Base.html',
                            landingPage=landingPage,
                            aboutPage=aboutPage,
@@ -100,7 +128,8 @@ def landing():
                            blastPage=blastPage,
                            searchandplotjs=searchandplotjs,
                            tablePage=tablePage,
-                           flags=flags))
+                           flags=flags,
+                           favicon_location=favicon_location))
 
 @app.route('/postsearch')
 def postsearch():
