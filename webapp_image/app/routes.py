@@ -66,7 +66,7 @@ def process_search_terms(search_terms):
     return(results_dict)
 
 def get_flags():
-    flags_path = os.path.join(os.environ['YAML_LOCATION'], 'flags.yaml')
+    flags_path = os.path.join(os.environ['CONTENT_LOCATION'], 'flags.yaml')
     if os.path.isfile(flags_path):
         flags = yaml.load(open(flags_path))
     else:

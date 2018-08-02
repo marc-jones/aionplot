@@ -122,7 +122,7 @@ for document in search_terms_dict.values():
     search_terms_collection.insert(document)
 
 # Create the flags YAML
-yaml_path = os.path.join(os.environ['YAML_LOCATION'], 'flags.yaml')
+yaml_path = os.path.join(os.environ['CONTENT_LOCATION'], 'flags.yaml')
 facet_dict = {name: list(facet_dict[name]) for name in facet_dict}
 flags_dict['facets'] = facet_dict
 yaml.dump(flags_dict, open(yaml_path, 'w'))

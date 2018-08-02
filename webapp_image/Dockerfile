@@ -5,6 +5,6 @@ COPY ./setup /setup
 RUN /setup/setup_virtualx_env.sh
 WORKDIR /setup
 RUN mv app.conf /etc/nginx/conf.d/
-ENV YAML_LOCATION=/yaml
+ENV CONTENT_LOCATION=/content
 RUN cat /app/templates/SearchAndPlot/*.js > /app/templates/SearchAndPlot.js
 RUN pip install -r requirements.txt

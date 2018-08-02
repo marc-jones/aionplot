@@ -9,7 +9,7 @@ services:
         ports:
             - "80:80"
         volumes:
-            - "~/scratch/flask_yaml:/yaml"
+            - "~/scratch/content:/content"
         environment:
             - MONGO_HOSTNAME=db
         networks:
