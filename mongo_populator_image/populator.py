@@ -83,8 +83,8 @@ else:
 website_info_path = os.path.join(os.environ['DATA_LOCATION'],
     'website_information.yaml')
 website_info_defaults = {
-    'name': 'Time Series',
-    'short_name': 'TS',
+    'name': 'AionPlot',
+    'short_name': 'AP',
     'x_axis_label': 'Time',
     'y_axis_label': 'Value'
 }
