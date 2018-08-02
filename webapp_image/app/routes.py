@@ -78,13 +78,16 @@ def landing():
     flags=get_flags()
     with app.open_resource('static/content/landing.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
-    landingPage = render_template('Landing.html', content=content)
+        content = render_template_string(content)
+    landingPage = render_template('MarkdownBase.html', content=content)
     with app.open_resource('static/content/about.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
-    aboutPage = render_template('About.html', content=content)
+        content = render_template_string(content)
+    aboutPage = render_template('MarkdownBase.html', content=content)
     with app.open_resource('static/content/howtouse.md') as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
-    howToUsePage = render_template('HowToUse.html', content=content)
+        content = render_template_string(content)
+    howToUsePage = render_template('MarkdownBase.html', content=content)
     searchPage = render_template('Search.html', flags=flags)
     blastPage = render_template('Blast.html')
     tablePage = render_template('Table.html')

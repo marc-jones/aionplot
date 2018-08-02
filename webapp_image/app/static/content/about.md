@@ -1,3 +1,5 @@
+<center><h2>About</h2></center>
+
 This is a web app to facilitate interrogation of time series data collected
 from *Brassica napus*. The data was collected from the cultivars **Tapidor** (a
 semi-winter cultivar) and **Westar** (a spring cultivar) with the aim of being
@@ -39,7 +41,7 @@ an expression level for each identified transcript.
 
 The data available in this web app was generated using the availble *Brassica
 napus* genome sequence as a reference sequence. This sequence was generated
-from sequencing the *Brassica napus* cultivar Darmor-*bzh* 
+from sequencing the *Brassica napus* cultivar Darmor-*bzh*
 (<a href="http://www.sciencemag.org/content/345/6199/950.full", target="_blank">Chalhoub et al. 2014</a>).
 Transcripts were determined directly from the sequencing data by Cufflinks.
 

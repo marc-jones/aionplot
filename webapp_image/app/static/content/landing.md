@@ -1,3 +1,13 @@
+<h1 id="sec0" align='center'>ORDER</h1>
+
+<h3 id="subhead" align="center">Oilseed Rape Developmental Expression Resource</h3>
+
+<br>
+
+<img class="img-responsive center-block" style="width:400px;max-width:100%" src="{{ url_for('static', filename='content/bnapus_flower.svg') }}" alt="Brassica napus">
+
+<br>
+
 ORDER was created as part of a project looking at gene expression changes in *Brassica napus* over development.
 This website provides an easy way of browsing and graphing the collected data.
 It is hoped that the accessibility and usability of the website will foster translational science between *Arabidopsis thaliana* and *Brassica napus*.

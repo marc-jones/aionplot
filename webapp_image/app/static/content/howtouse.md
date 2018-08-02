@@ -1,3 +1,5 @@
+<center><h2>How To Use</h2></center>
+
 In order to search the database, please use the Search, BLAST Search and Table tabs.
 How they are used is explained as follows.
 
