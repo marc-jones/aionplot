@@ -70,7 +70,10 @@ def get_flags():
     if os.path.isfile(flags_path):
         flags = yaml.load(open(flags_path))
     else:
-        flags = {}
+        flags = {
+            'name': 'AionPlot',
+            'short_name': 'AP'
+        }
     return(flags)
 
 @app.route('/user_content/<path:filename>')

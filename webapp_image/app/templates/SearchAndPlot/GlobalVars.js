@@ -30,10 +30,12 @@ plot_vars = {
         timeRange: {},
         sliderRange: {},
     {% endif %}
-    axisLabels: {
-        x: {{ flags['x_axis_label']|tojson }},
-        y: {{ flags['y_axis_label']|tojson }}
-    },
+    {% if 'x_axis_label' in flags.keys() and 'y_axis_label' in flags.keys() %}
+        axisLabels: {
+            x: {{ flags['x_axis_label']|tojson }},
+            y: {{ flags['y_axis_label']|tojson }}
+        },
+    {% endif %}
     displayErrors: false
 }
 
