@@ -28,55 +28,54 @@ time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
 
 flags_dict['timerange'] = [None, None]
 
+name_set = set([])
+if os.path.isfile(time_series_data_path):
+    with open(time_series_data_path) as f:
+        headers = f.readline().strip().split('\t')
+        assert(headers[0:5]==['name', 'time', 'value', 'hi', 'lo'])
+        for line in f:
+            line = line.strip().split('\t')
+            name_set.add(line[0])
+
 if os.path.isfile(time_series_data_path):
     with open(time_series_data_path) as f:
         # Read header and check that the mandatory five fields are there
         headers = f.readline().strip().split('\t')
         assert(headers[0:5]==['name', 'time', 'value', 'hi', 'lo'])
         facet_dict = {headers[idx]: set([]) for idx in range(5, len(headers))}
-        for line in f:
-            line = line.strip().split('\t')
-            measurements_dict.setdefault(line[0],
-                {'name': line[0], 'measurements': []})
-            measurement_dict = {headers[idx]: line[idx] for idx in
-                range(1, len(line))}
-            for float_name in headers[1:5]:
-                measurement_dict[float_name] = float(
-                    measurement_dict[float_name])
-            measurements_dict[line[0]]['measurements'].append(
-                measurement_dict)
-            search_terms_dict[line[0]] = {'name': line[0], 'nicknames': [],
-                'term_type': 'direct'}
-            for idx in range(5, len(line)):
-                facet_dict[headers[idx]].add(line[idx])
-            if (flags_dict['timerange'][0] == None or
-                measurement_dict['time'] <= flags_dict['timerange'][0]):
-                flags_dict['timerange'][0] = measurement_dict['time']
-            if (flags_dict['timerange'][1] == None or
-                flags_dict['timerange'][1] <= measurement_dict['time']):
-                flags_dict['timerange'][1] = measurement_dict['time']
-            if len(measurements_dict) > dump_threshold:
-                current_time = time.time()
-                print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
-                last_time = current_time
-                for name in measurements_dict:
-                    measurements_collection.update(
-                        {'name': measurements_dict[name]['name']},
-                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                        True)
-                measurements_dict = {}
-                current_time = time.time()
-                print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
-                last_time = current_time
-        current_time = time.time()
-        print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
-        last_time = current_time
-        for name in measurements_dict:
-            measurements_collection.update(
-                {'name': measurements_dict[name]['name']},
-                {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                True)
-        measurements_dict = {}
+        current_number = 0
+        for current_name in list(name_set):
+            current_number += 1
+            for line in f:
+                line = line.strip().split('\t')
+                if line[0] == current_name:
+                    measurements_dict.setdefault(line[0],
+                        {'name': line[0], 'measurements': []})
+                    measurement_dict = {headers[idx]: line[idx] for idx in
+                        range(1, len(line))}
+                    for float_name in headers[1:5]:
+                        measurement_dict[float_name] = float(
+                            measurement_dict[float_name])
+                    measurements_dict[line[0]]['measurements'].append(
+                        measurement_dict)
+                    search_terms_dict[line[0]] = {'name': line[0], 'nicknames': [],
+                        'term_type': 'direct'}
+                    for idx in range(5, len(line)):
+                        facet_dict[headers[idx]].add(line[idx])
+                    if (flags_dict['timerange'][0] == None or
+                        measurement_dict['time'] <= flags_dict['timerange'][0]):
+                        flags_dict['timerange'][0] = measurement_dict['time']
+                    if (flags_dict['timerange'][1] == None or
+                        flags_dict['timerange'][1] <= measurement_dict['time']):
+                        flags_dict['timerange'][1] = measurement_dict['time']
+            measurements_collection.insert(
+                {
+                    'name': measurements_dict[current_name]['name'],
+                    'measurements': measurements_dict[current_name]['measurements']
+                })
+            print(current_name)
+            print(float(current_number) / len(name_set))
+            measurements_dict = {}
 else:
     sys.exit('Time series data does not exist')
 
