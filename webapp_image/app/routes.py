@@ -60,8 +60,8 @@ def process_search_terms(search_terms):
                 'subheading': '; '.join(search_results[0]['nicknames']),
                 'records': [{
                     'name': search_results[0]['name'],
-                    'tooltip': '',
-                    'label_status': 'default'}]
+                    'tooltip': search_results[0]['tooltip'],
+                    'label_status': search_results[0]['label_status']}]
             }
         elif (len(search_results) == 1 and
             search_results[0]['term_type'] == 'indirect'):

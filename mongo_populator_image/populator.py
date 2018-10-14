@@ -12,6 +12,7 @@ last_time = time.time()
 search_terms_dict = {}
 facet_dict = {}
 flags_dict = {}
+table_information_dict = {}
 
 mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
 
@@ -46,7 +47,7 @@ if os.path.isfile(time_series_data_path):
             measurements_dict[line[0]]['measurements'].append(
                 measurement_dict)
             search_terms_dict[line[0]] = {'name': line[0], 'nicknames': [],
-                'term_type': 'direct'}
+                'term_type': 'direct', 'tooltip': '', 'label_status': 'default'}
             for idx in range(5, len(line)):
                 facet_dict[headers[idx]].add(line[idx])
             if (flags_dict['timerange'][0] == None or
@@ -80,8 +81,30 @@ if os.path.isfile(time_series_data_path):
 else:
     sys.exit('Time series data does not exist')
 
-group_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
+record_data_path = os.path.join(os.environ['DATA_LOCATION'], 'record_details.tsv')
+if os.path.isfile(record_data_path):
+    with open(record_data_path) as f:
+        headers = f.readline().strip().split('\t')
+        assert('name' in headers)
+        if 'groups' in headers:
+            sys.exit('"groups" is a reserved column name, and cannot be used in record_details.tsv')
+        for line in f:
+            line = line.strip().split('\t')
+            if not line[headers.index('name')] in search_terms_dict.keys():
+                sys.exit(line[headers.index('name')] + ' in record_details.tsv does not exist in the time series data')
+            if 'label_tooltip' in headers:
+                search_terms_dict[line[headers.index('name')]]['tooltip'] = line[headers.index('label_tooltip')]
+            else:
+                search_terms_dict[line[headers.index('name')]]['tooltip'] = ''
+            if 'label_colour' in headers:
+                search_terms_dict[line[headers.index('name')]]['label_status'] = line[headers.index('label_colour')]
+            else:
+                search_terms_dict[line[headers.index('name')]]['label_status'] = 'default'
+            table_information_dict.setdefault(line[headers.index('name')], {})
+            for idx in range(len(headers)):
+                table_information_dict[line[headers.index('name')]][headers[idx]] = line[idx]
 
+group_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
 if os.path.isfile(group_data_path):
     with open(group_data_path) as f:
         headers = f.readline().strip().split('\t')
@@ -93,9 +116,27 @@ if os.path.isfile(group_data_path):
             temp_entry_dict = {'name': line[headers.index('name')]}
             if 'label_tooltip' in headers:
                 temp_entry_dict['tooltip'] = line[headers.index('label_tooltip')]
+            else:
+                temp_entry_dict['tooltip'] = ''
             if 'label_colour' in headers:
                 temp_entry_dict['label_status'] = line[headers.index('label_colour')]
+            else:
+                temp_entry_dict['label_status'] = 'default'
             search_terms_dict[line[headers.index('group')]]['records'].append(temp_entry_dict)
+            table_information_dict.setdefault(line[headers.index('name')], {})
+            table_information_dict[line[headers.index('name')]].setdefault('groups', [])
+            temp_table_entry_dict = {}
+            for idx in range(len(headers)):
+                if not headers[idx] == 'name':
+                    temp_table_entry_dict[headers[idx]] = line[idx]
+            table_information_dict[line[headers.index('name')]]['groups'].append(temp_table_entry_dict)
+
+if os.path.isfile(record_data_path) or os.path.isfile(group_data_path):
+    for key in table_information_dict:
+        measurements_collection.update(
+            {'name': key},
+            {'$set': {'table_details': table_information_dict[key]}},
+            True)
 
 website_info_path = os.path.join(os.environ['DATA_LOCATION'],
     'website_information.yaml')

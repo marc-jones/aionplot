@@ -8,7 +8,7 @@
         {% endif %}
         {% for record in checkbox_dict[entry]['records'] %}
             <div class="[ form-group ]">
-                <input class="record_checkbox" value="{{ record['name'] }}" homology="{{ checkbox_dict[entry]['heading'] }}" type="checkbox" name="{{ checkbox_dict[entry]['heading'] }}{{ record['name'] }}" id="{{ checkbox_dict[entry]['heading'] }}{{ record['name'] }}" autocomplete="off" />
+                <input class="record_checkbox" value="{{ record['name'] }}" group="{{ checkbox_dict[entry]['heading'] }}" type="checkbox" name="{{ checkbox_dict[entry]['heading'] }}{{ record['name'] }}" id="{{ checkbox_dict[entry]['heading'] }}{{ record['name'] }}" autocomplete="off" />
                 <div class="[ btn-group ]" data-toggle="tooltip" title="{{ record['tooltip'] }}">
                     <label for="{{ checkbox_dict[entry]['heading'] }}{{ record['name'] }}" class="[ btn btn-{{ record['label_status'] }} ]">
                         <span class="[ glyphicon glyphicon-ok ]"></span>
