@@ -9,7 +9,6 @@ dump_threshold = 10000
 
 last_time = time.time()
 
-measurements_dict = {}
 search_terms_dict = {}
 facet_dict = {}
 flags_dict = {}
@@ -29,6 +28,7 @@ time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
 flags_dict['timerange'] = [None, None]
 
 if os.path.isfile(time_series_data_path):
+    measurements_dict = {}
     with open(time_series_data_path) as f:
         # Read header and check that the mandatory five fields are there
         headers = f.readline().strip().split('\t')
@@ -80,6 +80,22 @@ if os.path.isfile(time_series_data_path):
 else:
     sys.exit('Time series data does not exist')
 
+group_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
+
+if os.path.isfile(group_data_path):
+    with open(group_data_path) as f:
+        headers = f.readline().strip().split('\t')
+        assert('name' in headers and 'group' in headers)
+        for line in f:
+            line = line.strip().split('\t')
+            search_terms_dict.setdefault(line[headers.index('group')],
+                {'name': line[headers.index('group')], 'nicknames': [], 'term_type': 'indirect', 'records': []})
+            temp_entry_dict = {'name': line[headers.index('name')]}
+            if 'label_tooltip' in headers:
+                temp_entry_dict['tooltip'] = line[headers.index('label_tooltip')]
+            if 'label_colour' in headers:
+                temp_entry_dict['label_status'] = line[headers.index('label_colour')]
+            search_terms_dict[line[headers.index('group')]]['records'].append(temp_entry_dict)
 
 website_info_path = os.path.join(os.environ['DATA_LOCATION'],
     'website_information.yaml')

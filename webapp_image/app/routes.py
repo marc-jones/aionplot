@@ -63,6 +63,13 @@ def process_search_terms(search_terms):
                     'tooltip': '',
                     'label_status': 'default'}]
             }
+        elif (len(search_results) == 1 and
+            search_results[0]['term_type'] == 'indirect'):
+                results_dict[term] = {
+                    'heading': term,
+                    'subheading': '; '.join(search_results[0]['nicknames']),
+                    'records': search_results[0]['records']
+                }
     return(results_dict)
 
 def get_flags():
