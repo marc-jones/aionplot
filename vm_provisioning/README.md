@@ -11,3 +11,10 @@ vagrant up
 ```
 ansible -m ping -i hosts all
 ```
+
+
+## Provision the virtual machines using Ansible
+
+```
+ansible-playbook -i hosts playbook.yml
+```

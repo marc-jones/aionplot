@@ -1,0 +1,33 @@
+---
+- hosts: all
+  tasks:
+    - name: install Docker dependencies
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+    - name: add the Docker repo
+      yum_repository:
+        name: dockerrepo
+        description: docker main repository
+        baseurl: https://yum.dockerproject.org/repo/main/centos/7/
+        enabled: 1
+        gpgcheck: 1
+        gpgkey: https://yum.dockerproject.org/gpg
+    - name: install the Docker engine
+      yum:
+        name: docker-engine
+      notify: restart docker daemon
+
+    - name: enable the Docker service
+      service: name=docker
+               enabled=yes
+
+  handlers:
+    - name: restart docker daemon
+      service:
+        name: docker
+        state: restarted
