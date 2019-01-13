@@ -42,3 +42,14 @@ docker run -it --network=flaskmongo_webapp -v /home/jonesd/Documents/order-data-
 
 docker run -it --network=flaskmongo_webapp -v /home/jonesd/irwin_local/2018/2018_07_18_rna_seq/output:/data -v ~/scratch/content:/content populator
 ```
+
+To connect to the database:
+
+```
+docker exec -it flaskmongo_db.xxxxxxx bash
+
+mongo
+
+use time_series
+db.measurements.find({})
+```

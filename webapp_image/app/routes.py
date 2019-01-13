@@ -156,7 +156,7 @@ def postsearch():
 
 @app.route('/postcheckboxchange')
 def postcheckboxchange():
-    names = request.args.get('names').split(',')
+    names = list(set(request.args.get('names').split(',')))
     measurement_data = get_measurement_data(names)
     return(jsonify(measurement_data))
 

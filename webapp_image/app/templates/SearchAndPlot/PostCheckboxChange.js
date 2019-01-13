@@ -19,5 +19,6 @@ $(document).on("change", "input[type='checkbox']", function() {
         function (new_measurement_data) {
             measurement_data = new_measurement_data;
             $.event.trigger({type: 'replot'});
+            $.event.trigger({type: 'update_table'});
         })
 });
