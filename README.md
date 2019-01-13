@@ -16,6 +16,12 @@ docker build -t populator .
 cd ..
 ```
 
+Create the required directory structure:
+
+```
+mkdir -p ~/scratch/{content,mongo_data}
+```
+
 Then, set up the stack with:
 
 ```
