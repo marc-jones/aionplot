@@ -4,6 +4,7 @@ import yaml
 import sys
 import time
 import shutil
+import subprocess
 
 dump_threshold = 10000
 
@@ -158,10 +159,15 @@ else:
 for key in website_info_dict:
     flags_dict[key] = website_info_dict[key]
 
-
 fasta_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'genes.fasta')
+blast_db_folder = os.path.join(os.environ['CONTENT_LOCATION'], 'blast_db')
 if os.path.isfile(fasta_data_path):
+    os.mkdir(blast_db_folder)
+    shutil.copy(fasta_data_path, blast_db_folder)
+    subprocess.call(['/usr/bin/blast_bin/makeblastdb',
+                      '-in', os.path.join(blast_db_folder, 'genes.fasta'),
+                      '-dbtype', 'nucl'])
     flags_dict['fasta_available'] = True
 else:
     flags_dict['fasta_available'] = False

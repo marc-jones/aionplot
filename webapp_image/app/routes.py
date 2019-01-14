@@ -10,10 +10,9 @@ import os
 import pdfkit
 
 ## imports required for blast search
-#import subprocess
-#import tempfile
-#import os
-#import xml.etree.ElementTree as ET
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
 
 def get_measurement_data(list_of_names):
     if 'most_recent_search' in session:
@@ -241,29 +240,29 @@ def downloadtsdata():
             #return(symbols)
     #return(symbols)
 
-#def blastquery(query_sequence):
-    #tmp_file_link = tempfile.mkstemp()
-    #tmp_fasta = os.fdopen(tmp_file_link[0], 'w')
-    #tmp_fasta.write(query_sequence)
-    #tmp_fasta.close()
-    #subprocess.Popen(['/var/www/html/brassica-app/blast_bin/blastn',
-                      #'-db',
-                      #'var/www/html/brassica-app/blast_db/merged_genes.fasta',
-                      #'-query', tmp_file_link[1],
-                      #'-out', tmp_file_link[1] + '.xml',
-                      #'-outfmt', '5',
-                      #'-task', 'blastn',
-                      #'-evalue', '1e-20']).communicate()
-    #test = open(tmp_file_link[1]).readline()
-    #tree = ET.parse(tmp_file_link[1] + '.xml')
-    #root = tree.getroot()
-    #search_results = {}
-    #for hit in root.iter('Hit'):
-        #hit_def = hit.find('Hit_def').text
-        #identity = [float(e.text) for e in hit.iter('Hsp_identity')][0]
-        #bit_score = [float(e.text) for e in hit.iter('Hsp_bit-score')][0]
-        #hsp_length = [float(e.text) for e in hit.iter('Hsp_align-len')][0]
-        #search_results[hit_def] = {'identity': identity,
-                                   #'bit_score': bit_score,
-                                   #'hsp_length': hsp_length}
-    #return(search_results)
+def blastquery(query_sequence):
+    tmp_file_link = tempfile.mkstemp()
+    tmp_fasta = os.fdopen(tmp_file_link[0], 'w')
+    tmp_fasta.write(query_sequence)
+    tmp_fasta.close()
+    subprocess.Popen(['/usr/bin/blast_bin/blastn',
+                      '-db', os.path.join(os.environ['CONTENT_LOCATION'],
+                                          'blast_db', 'genes.fasta'),
+                      '-query', tmp_file_link[1],
+                      '-out', tmp_file_link[1] + '.xml',
+                      '-outfmt', '5',
+                      '-task', 'blastn',
+                      '-evalue', '1e-20']).communicate()
+    test = open(tmp_file_link[1]).readline()
+    tree = ET.parse(tmp_file_link[1] + '.xml')
+    root = tree.getroot()
+    search_results = {}
+    for hit in root.iter('Hit'):
+        hit_def = hit.find('Hit_def').text
+        identity = [float(e.text) for e in hit.iter('Hsp_identity')][0]
+        bit_score = [float(e.text) for e in hit.iter('Hsp_bit-score')][0]
+        hsp_length = [float(e.text) for e in hit.iter('Hsp_align-len')][0]
+        search_results[hit_def] = {'identity': identity,
+                                   'bit_score': bit_score,
+                                   'hsp_length': hsp_length}
+    return(search_results)
