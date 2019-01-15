@@ -26,16 +26,12 @@ var formatChildRow = function(row) {
                 if (!Object.keys(group_data_object).includes(col_name)) {
                     returnTableString += '<td></td>'
                 } else {
-                    console.log('here');
                     returnTableString += '<td>' + group_data_object[col_name] +
                         '</td>';
                 }
             });
         });
         returnTableString += '</tr></table>'
-
-        console.log(returnTableString);
-
         return(returnTableString);
     }
 }
@@ -46,7 +42,6 @@ $(document).on('update_table', function() {
 
     var column_titles = [];
 
-    var selected_names = '';
     $("input[type='checkbox'].record_checkbox").each(function( index, listItem ) {
         if (listItem.checked) {
             var name = listItem.value;
@@ -60,7 +55,7 @@ $(document).on('update_table', function() {
                     Object.entries(table_details).forEach(
                         function(entry) {row_object[entry[0]] = entry[1];});
 
-                    if (group != '') {
+                    if (group != '' && group != 'BLAST Hits') {
                         table_details['groups'].forEach(function(group_record, idx) {
                             if (group_record.group == group) {
                                 column_titles = column_titles.concat(Object.keys(table_details['groups'][idx]));
@@ -110,12 +105,14 @@ $(document).on('update_table', function() {
         $('#plot_table').empty();
     }
 
-    var table = $('#plot_table').DataTable({
-        data: data_table_array,
-        columnDefs: columnDefs,
-        columns: columns,
-        order: [[1, 'asc']]
-    });
+    if (data_table_array.length > 0) {
+        var table = $('#plot_table').DataTable({
+            data: data_table_array,
+            columnDefs: columnDefs,
+            columns: columns,
+            order: [[1, 'asc']]
+        });
+    }
 
     $('#plot_table tbody').unbind();
     $('#plot_table tbody').on('click', 'td.details-control',
