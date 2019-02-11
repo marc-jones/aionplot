@@ -23,8 +23,11 @@
       notify: restart docker daemon
 
     - name: enable the Docker service
-      service: name=docker
-               enabled=yes
+      service:
+        name: docker
+        state: started
+        enabled: yes
+               
 
   handlers:
     - name: restart docker daemon
