@@ -1,5 +1,9 @@
 ---
 - hosts: all
+
+  vars_files:
+    - vars.yml
+
   tasks:
     - name: install Docker dependencies
       yum:
@@ -27,6 +31,16 @@
         name: docker
         state: started
         enabled: yes
+
+    - name: install git
+      yum:
+        name: git
+        state: present
+
+    - name: clone the webapp repository
+      git:
+        repo: "{{ webapp_git_repo }}"
+        dest: /opt/aionplot
                
 
   handlers:

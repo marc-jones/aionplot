@@ -12,6 +12,14 @@ vagrant up
 ansible -m ping -i hosts all
 ```
 
+## Configure input variables
+
+```
+cp vars-template.yml vars.yml
+```
+
+Update the ``vars.yml`` file with appropriate input variables.
+
 
 ## Provision the virtual machines using Ansible
 
