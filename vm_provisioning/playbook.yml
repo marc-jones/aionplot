@@ -5,6 +5,17 @@
     - vars.yml
 
   tasks:
+
+    - name: install git
+      yum:
+        name: git
+        state: present
+
+    - name: clone the webapp repository
+      git:
+        repo: "{{ webapp_git_repo }}"
+        dest: /opt/aionplot
+
     - name: install Docker dependencies
       yum:
         name: "{{ packages }}"
@@ -13,6 +24,7 @@
         - yum-utils
         - device-mapper-persistent-data
         - lvm2
+
     - name: add the Docker repo
       yum_repository:
         name: dockerrepo
@@ -31,17 +43,6 @@
         name: docker
         state: started
         enabled: yes
-
-    - name: install git
-      yum:
-        name: git
-        state: present
-
-    - name: clone the webapp repository
-      git:
-        repo: "{{ webapp_git_repo }}"
-        dest: /opt/aionplot
-               
 
   handlers:
     - name: restart docker daemon
