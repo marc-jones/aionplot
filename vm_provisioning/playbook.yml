@@ -6,10 +6,23 @@
 
   tasks:
 
-    - name: install git
+    - name: install core packages (git)
       yum:
-        name: git
+        name: "{{ packages }}"
         state: present
+      vars:
+        packages:
+          - git
+
+    - name: download get-pip.py
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /opt/get_pip.py
+      register: get_pip_downloaded
+
+    - name: install pip
+      command: python /opt/get_pip.py
+      when: get_pip_downloaded is changed
 
     - name: clone the webapp repository
       git:
@@ -21,9 +34,9 @@
         name: "{{ packages }}"
       vars:
         packages:
-        - yum-utils
-        - device-mapper-persistent-data
-        - lvm2
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
 
     - name: add the Docker repo
       yum_repository:
@@ -43,6 +56,14 @@
         name: docker
         state: started
         enabled: yes
+
+    - name: install Python docker module
+      pip:
+        name: docker
+
+    - name: Init a new docker swarm with default paramaters
+      docker_swarm:
+        state: present
 
   handlers:
     - name: restart docker daemon
