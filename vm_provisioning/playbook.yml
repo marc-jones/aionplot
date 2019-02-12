@@ -81,8 +81,8 @@
         networks:
           - name: webapp
         env:
-          MONGO_INITDB_ROOT_USERNAME: {{ mongo_initdb_root_username }}
-          MONGO_INITDB_ROOT_PASSWORD: {{ mongo_initdb_root_password }}
+          MONGO_INITDB_ROOT_USERNAME: "{{ mongo_initdb_root_username }}"
+          MONGO_INITDB_ROOT_PASSWORD: "{{ mongo_initdb_root_password }}"
 
     - name: create flaskapp docker container
       docker_container:
@@ -95,8 +95,8 @@
           - name: webapp
         env:
           MONGO_HOSTNAME: db
-          MONGO_WEBAPP_USERNAME: {{ mongo_initdb_root_username }}
-          MONGO_WEBAPP_PASSWORD: {{ mongo_initdb_root_password }}
+          MONGO_WEBAPP_USERNAME: "{{ mongo_initdb_root_username }}"
+          MONGO_WEBAPP_PASSWORD: "{{ mongo_initdb_root_password }}"
 
   handlers:
     - name: restart docker daemon
