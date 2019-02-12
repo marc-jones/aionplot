@@ -61,9 +61,37 @@
       pip:
         name: docker
 
-    - name: Init a new docker swarm with default paramaters
-      docker_swarm:
-        state: present
+    - name: create webapp network
+      docker_network:
+        name: webapp
+
+    - name: create mongo data directory
+      file:
+        path: "{{ mongo_data_dir }}"
+        state: directory
+        recurse: yes
+
+    - name: create mongo docker container
+      docker_container:
+        name: db
+        image: "mongo:3.4-jessie" 
+        state: started
+        volumes:
+          - "{{ mongo_data_dir }}:/data/db"
+        networks:
+          - name: webapp
+
+    - name: create flaskapp docker container
+      docker_container:
+        name: web
+        image: flaskapp
+        state: started
+        ports:
+          - "80:80"
+        networks:
+          - name: webapp
+        env:
+          MONGO_HOSTNAME: db
 
   handlers:
     - name: restart docker daemon
