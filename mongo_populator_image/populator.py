@@ -14,7 +14,13 @@ search_terms_dict = {}
 facet_dict = {}
 flags_dict = {}
 
-mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017, connect=False)
+mungo_client = MongoClient(
+    os.environ['MONGO_HOSTNAME'],
+    27017,
+    username=os.environ['MONGO_WEBAPP_USERNAME'],
+    password=os.environ['MONGO_WEBAPP_PASSWORD'],
+    connect=False
+)
 
 # Create the time series database
 mungo_client.drop_database('time_series')

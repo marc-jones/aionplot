@@ -7,8 +7,13 @@ app = Flask(__name__)
 
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
-mungo_client = MongoClient(os.environ['MONGO_HOSTNAME'], 27017,
-    connect=False)
+mungo_client = MongoClient(
+    os.environ['MONGO_HOSTNAME'],
+    27017,
+    username=os.environ['MONGO_WEBAPP_USERNAME'],
+    password=os.environ['MONGO_WEBAPP_PASSWORD'],
+    connect=False
+)
 
 from routes import *
 

@@ -74,12 +74,15 @@
     - name: create mongo docker container
       docker_container:
         name: db
-        image: "mongo:3.4-jessie" 
+        image: "mongo:4.0.6" 
         state: started
         volumes:
           - "{{ mongo_data_dir }}:/data/db"
         networks:
           - name: webapp
+        env:
+          MONGO_INITDB_ROOT_USERNAME: {{ mongo_initdb_root_username }}
+          MONGO_INITDB_ROOT_PASSWORD: {{ mongo_initdb_root_password }}
 
     - name: create flaskapp docker container
       docker_container:
@@ -92,6 +95,8 @@
           - name: webapp
         env:
           MONGO_HOSTNAME: db
+          MONGO_WEBAPP_USERNAME: {{ mongo_initdb_root_username }}
+          MONGO_WEBAPP_PASSWORD: {{ mongo_initdb_root_password }}
 
   handlers:
     - name: restart docker daemon
