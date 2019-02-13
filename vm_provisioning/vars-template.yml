@@ -4,5 +4,7 @@ mongo_initdb_root_username: change_me
 mongo_initdb_root_password: change_me
 mongo_data_dir: /opt/mongo/data
 mongo_init_config_dir: /opt/mongo/init_config
+mongo_webapp_username: change_me
 mongo_webapp_password: change_me
+mongo_dbadmin_username: change_me
 mongo_dbadmin_password: change_me
