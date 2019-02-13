@@ -71,6 +71,17 @@
         state: directory
         recurse: yes
 
+    - name: create mongo init config directory
+      file:
+        path: "{{ mongo_init_config_dir }}"
+        state: directory
+        recurse: yes
+
+    - name: generate mongo docker container startup script
+      template:
+        src: mongo_config.js
+        dest: "{{ mongo_init_config_dir }}"
+
     - name: create mongo docker container
       docker_container:
         name: db
@@ -78,6 +89,7 @@
         state: started
         volumes:
           - "{{ mongo_data_dir }}:/data/db"
+          - "{{ mongo_init_config_dir }}:/docker-entrypoint-initdb.d"
         networks:
           - name: webapp
         env:
