@@ -17,8 +17,8 @@ flags_dict = {}
 mungo_client = MongoClient(
     os.environ['MONGO_HOSTNAME'],
     27017,
-    username=os.environ['MONGO_WEBAPP_USERNAME'],
-    password=os.environ['MONGO_WEBAPP_PASSWORD'],
+    username=os.environ['MONGO_DBADMIN_USERNAME'],
+    password=os.environ['MONGO_DBADMIN_PASSWORD'],
     connect=False
 )
 
