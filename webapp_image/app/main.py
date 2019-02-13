@@ -5,7 +5,7 @@ import logging, sys
 
 app = Flask(__name__)
 
-app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+app.secret_key = os.environ['WEBAPP_SECRET']
 
 mungo_client = MongoClient(
     os.environ['MONGO_HOSTNAME'],

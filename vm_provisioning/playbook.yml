@@ -106,6 +106,7 @@
         networks:
           - name: webapp
         env:
+          WEBAPP_SECRET: "{{ webapp_secret }}"
           MONGO_HOSTNAME: db
           MONGO_WEBAPP_USERNAME: "{{ mongo_webapp_username }}"
           MONGO_WEBAPP_PASSWORD: "{{ mongo_webapp_password }}"
