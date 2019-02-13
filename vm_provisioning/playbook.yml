@@ -26,7 +26,7 @@
 
     - name: clone the webapp repository
       git:
-        repo: "{{ webapp_git_repo }}"
+        repo: "{{ WEBAPP_GIT_REPO }}"
         dest: /opt/aionplot
 
     - name: install Docker dependencies
@@ -67,20 +67,20 @@
 
     - name: create mongo data directory
       file:
-        path: "{{ mongo_data_dir }}"
+        path: "{{ MONGO_DATA_DIR }}"
         state: directory
         recurse: yes
 
     - name: create mongo init config directory
       file:
-        path: "{{ mongo_init_config_dir }}"
+        path: "{{ MONGO_INIT_CONFIG_DIR }}"
         state: directory
         recurse: yes
 
     - name: generate mongo docker container startup script
       template:
         src: mongo_config.js
-        dest: "{{ mongo_init_config_dir }}"
+        dest: "{{ MONGO_INIT_CONFIG_DIR }}"
 
     - name: create mongo docker container
       docker_container:
@@ -88,13 +88,13 @@
         image: "mongo:4.0.6" 
         state: started
         volumes:
-          - "{{ mongo_data_dir }}:/data/db"
-          - "{{ mongo_init_config_dir }}:/docker-entrypoint-initdb.d"
+          - "{{ MONGO_DATA_DIR }}:/data/db"
+          - "{{ MONGO_INIT_CONFIG_DIR }}:/docker-entrypoint-initdb.d"
         networks:
           - name: webapp
         env:
-          MONGO_INITDB_ROOT_USERNAME: "{{ mongo_initdb_root_username }}"
-          MONGO_INITDB_ROOT_PASSWORD: "{{ mongo_initdb_root_password }}"
+          MONGO_INITDB_ROOT_USERNAME: "{{ MONGO_INITDB_ROOT_USERNAME }}"
+          MONGO_INITDB_ROOT_PASSWORD: "{{ MONGO_INITDB_ROOT_PASSWORD }}"
 
     - name: create flaskapp docker container
       docker_container:
@@ -106,10 +106,10 @@
         networks:
           - name: webapp
         env:
-          WEBAPP_SECRET: "{{ webapp_secret }}"
+          WEBAPP_SECRET: "{{ WEBAPP_SECRET }}"
           MONGO_HOSTNAME: db
-          MONGO_WEBAPP_USERNAME: "{{ mongo_webapp_username }}"
-          MONGO_WEBAPP_PASSWORD: "{{ mongo_webapp_password }}"
+          MONGO_WEBAPP_USERNAME: "{{ MONGO_WEBAPP_USERNAME }}"
+          MONGO_WEBAPP_PASSWORD: "{{ MONGO_WEBAPP_PASSWORD }}"
 
   handlers:
     - name: restart docker daemon

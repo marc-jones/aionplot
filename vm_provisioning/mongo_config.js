@@ -1,12 +1,12 @@
 db = db.getSiblingDB('time_series');
 db.test.insert({'test': 'test'});
 db.createUser({
-  user: '{{ mongo_webapp_username }}',
-  pwd: '{{ mongo_webapp_password }}',
+  user: '{{ MONGO_WEBAPP_USERNAME }}',
+  pwd: '{{ MONGO_WEBAPP_PASSWORD }}',
   roles: ['read']
 });
 db.createUser({
-  user: '{{ mongo_dbadmin_username }}',
-  pwd: '{{ mongo_dbadmin_password }}',
+  user: '{{ MONGO_DBADMIN_USERNAME }}',
+  pwd: '{{ MONGO_DBADMIN_PASSWORD }}',
   roles: ['readWrite', 'dbAdmin']
 });
