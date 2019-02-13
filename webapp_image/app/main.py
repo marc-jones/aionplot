@@ -12,6 +12,7 @@ mungo_client = MongoClient(
     27017,
     username=os.environ['MONGO_WEBAPP_USERNAME'],
     password=os.environ['MONGO_WEBAPP_PASSWORD'],
+    authSource="time_series",
     connect=False
 )
 
