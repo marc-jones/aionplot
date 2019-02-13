@@ -107,8 +107,8 @@
           - name: webapp
         env:
           MONGO_HOSTNAME: db
-          MONGO_WEBAPP_USERNAME: "{{ mongo_initdb_root_username }}"
-          MONGO_WEBAPP_PASSWORD: "{{ mongo_initdb_root_password }}"
+          MONGO_WEBAPP_USERNAME: "{{ mongo_webapp_username }}"
+          MONGO_WEBAPP_PASSWORD: "{{ mongo_webapp_password }}"
 
   handlers:
     - name: restart docker daemon
