@@ -6,10 +6,19 @@
 vagrant up
 ```
 
-## Finding out which VMs are responsive
+## Configure the hosts
 
 ```
-ansible -m ping -i hosts all
+cp hosts-template hosts
+```
+
+The ``dev`` host has been configured to work with the Vagrant virtual machine.
+
+
+## Ensure that the development VM is responsive
+
+```
+ansible -m ping -i hosts dev
 ```
 
 ## Configure input variables
@@ -18,11 +27,12 @@ ansible -m ping -i hosts all
 cp vars-template.yml vars.yml
 ```
 
-Update the ``vars.yml`` file with appropriate input variables.
+The default values are reasonable for a development server, but you may want to
+change the passwords.
 
 
 ## Provision the virtual machines using Ansible
 
 ```
-ansible-playbook -i hosts playbook.yml --limit 'dev'
+ansible-playbook -i hosts playbook.yml --limit dev
 ```
