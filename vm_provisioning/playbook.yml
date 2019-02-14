@@ -111,6 +111,34 @@
           MONGO_WEBAPP_USERNAME: "{{ MONGO_WEBAPP_USERNAME }}"
           MONGO_WEBAPP_PASSWORD: "{{ MONGO_WEBAPP_PASSWORD }}"
 
+    - name: install firewalld
+      yum:
+        name: firewalld
+        state: present
+
+    - name: start and enable firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: enable and persist http/https ports
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop: "{{ FIREWALLD_ALLOWED_SERVICES }}"
+
+    - name: enable and persist extra ports
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop: "{{ FIREWALLD_ALLOWED_PORTS }}"
+
+
   handlers:
     - name: restart docker daemon
       service:
