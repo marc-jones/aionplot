@@ -24,5 +24,5 @@ Update the ``vars.yml`` file with appropriate input variables.
 ## Provision the virtual machines using Ansible
 
 ```
-ansible-playbook -i hosts playbook.yml
+ansible-playbook -i hosts playbook.yml --limit 'dev'
 ```
