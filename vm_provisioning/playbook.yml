@@ -24,6 +24,7 @@
         name: firewalld
         state: started
         enabled: yes
+      notify: restart docker daemon
 
     - name: enable and persist http/https ports
       firewalld:
@@ -32,6 +33,7 @@
         state: enabled
         immediate: yes
       loop: "{{ FIREWALLD_ALLOWED_SERVICES }}"
+      notify: restart docker daemon
 
     - name: enable and persist extra ports
       firewalld:
@@ -40,6 +42,7 @@
         state: enabled
         immediate: yes
       loop: "{{ FIREWALLD_ALLOWED_PORTS }}"
+      notify: restart docker daemon
 
     - name: download get-pip.py
       get_url:
@@ -137,8 +140,6 @@
           MONGO_HOSTNAME: db
           MONGO_WEBAPP_USERNAME: "{{ MONGO_WEBAPP_USERNAME }}"
           MONGO_WEBAPP_PASSWORD: "{{ MONGO_WEBAPP_PASSWORD }}"
-
-
 
   handlers:
     - name: restart docker daemon
