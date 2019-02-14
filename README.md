@@ -16,6 +16,12 @@ docker build -t populator .
 cd ..
 ```
 
+Create the required directory structure:
+
+```
+mkdir -p ~/scratch/{content,mongo_data}
+```
+
 Then, set up the stack with:
 
 ```
@@ -41,4 +47,15 @@ Some useful commands while developing:
 docker run -it --network=flaskmongo_webapp -v /home/jonesd/Documents/order-data-files:/data -v ~/scratch/content:/content populator
 
 docker run -it --network=flaskmongo_webapp -v /home/jonesd/irwin_local/2018/2018_07_18_rna_seq/output:/data -v ~/scratch/content:/content populator
+```
+
+To connect to the database:
+
+```
+docker exec -it flaskmongo_db.xxxxxxx bash
+
+mongo
+
+use time_series
+db.measurements.find({})
 ```

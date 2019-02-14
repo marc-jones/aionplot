@@ -10,10 +10,9 @@ import os
 import pdfkit
 
 ## imports required for blast search
-#import subprocess
-#import tempfile
-#import os
-#import xml.etree.ElementTree as ET
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
 
 def get_measurement_data(list_of_names):
     if 'most_recent_search' in session:
@@ -46,7 +45,7 @@ def get_measurement_data(list_of_names):
 
 # Takes search terms and then returns the names associated with each search
 # term, with some added information such as nicknames
-def process_search_terms(search_terms):
+def process_search_terms(search_terms, blast_terms):
     db = mungo_client['time_series']
     search_terms_collection = db['search_terms']
     results_dict = {}
@@ -60,9 +59,32 @@ def process_search_terms(search_terms):
                 'subheading': '; '.join(search_results[0]['nicknames']),
                 'records': [{
                     'name': search_results[0]['name'],
-                    'tooltip': '',
-                    'label_status': 'default'}]
+                    'tooltip': search_results[0]['tooltip'],
+                    'label_status': search_results[0]['label_status']}]
             }
+        elif (len(search_results) == 1 and
+            search_results[0]['term_type'] == 'indirect'):
+                results_dict[term] = {
+                    'heading': term,
+                    'subheading': '; '.join(search_results[0]['nicknames']),
+                    'records': search_results[0]['records']
+                }
+    if len(blast_terms) > 0:
+        results_dict['blast_hits'] = {
+            'heading': 'BLAST Hits',
+            'subheading': '',
+            'records': []
+        }
+        for term in blast_terms:
+            search_results = [res for res in search_terms_collection.find(
+                {'name': term})]
+            if (len(search_results) == 1 and
+                search_results[0]['term_type'] == 'direct'):
+                results_dict['blast_hits']['records'].append({
+                        'name': search_results[0]['name'],
+                        'tooltip': search_results[0]['tooltip'],
+                        'label_status': search_results[0]['label_status']
+                })
     return(results_dict)
 
 def get_flags():
@@ -137,9 +159,9 @@ def landing():
 @app.route('/postsearch')
 def postsearch():
     search_terms = request.args.get('term').split(',')
-    checkbox_dict = process_search_terms(search_terms)
     query_sequence = request.args.get('sequence')
-    blast_list = []
+    blast_list = blastquery(query_sequence)
+    checkbox_dict = process_search_terms(search_terms, blast_list)
     return(jsonify(
         checkbox_html=render_template('Checkboxes.html',
             checkbox_dict=checkbox_dict),
@@ -149,7 +171,7 @@ def postsearch():
 
 @app.route('/postcheckboxchange')
 def postcheckboxchange():
-    names = request.args.get('names').split(',')
+    names = list(set(request.args.get('names').split(',')))
     measurement_data = get_measurement_data(names)
     return(jsonify(measurement_data))
 
@@ -234,29 +256,30 @@ def downloadtsdata():
             #return(symbols)
     #return(symbols)
 
-#def blastquery(query_sequence):
-    #tmp_file_link = tempfile.mkstemp()
-    #tmp_fasta = os.fdopen(tmp_file_link[0], 'w')
-    #tmp_fasta.write(query_sequence)
-    #tmp_fasta.close()
-    #subprocess.Popen(['/var/www/html/brassica-app/blast_bin/blastn',
-                      #'-db',
-                      #'var/www/html/brassica-app/blast_db/merged_genes.fasta',
-                      #'-query', tmp_file_link[1],
-                      #'-out', tmp_file_link[1] + '.xml',
-                      #'-outfmt', '5',
-                      #'-task', 'blastn',
-                      #'-evalue', '1e-20']).communicate()
-    #test = open(tmp_file_link[1]).readline()
-    #tree = ET.parse(tmp_file_link[1] + '.xml')
-    #root = tree.getroot()
-    #search_results = {}
-    #for hit in root.iter('Hit'):
-        #hit_def = hit.find('Hit_def').text
-        #identity = [float(e.text) for e in hit.iter('Hsp_identity')][0]
-        #bit_score = [float(e.text) for e in hit.iter('Hsp_bit-score')][0]
-        #hsp_length = [float(e.text) for e in hit.iter('Hsp_align-len')][0]
-        #search_results[hit_def] = {'identity': identity,
-                                   #'bit_score': bit_score,
-                                   #'hsp_length': hsp_length}
-    #return(search_results)
+def blastquery(query_sequence):
+    search_results = {}
+    if len(query_sequence) > 0:
+        tmp_file_link = tempfile.mkstemp()
+        tmp_fasta = os.fdopen(tmp_file_link[0], 'w')
+        tmp_fasta.write(query_sequence)
+        tmp_fasta.close()
+        subprocess.Popen(['/usr/bin/blast_bin/blastn',
+                        '-db', os.path.join(os.environ['CONTENT_LOCATION'],
+                                            'blast_db', 'genes.fasta'),
+                        '-query', tmp_file_link[1],
+                        '-out', tmp_file_link[1] + '.xml',
+                        '-outfmt', '5',
+                        '-task', 'blastn',
+                        '-evalue', '1e-20']).communicate()
+        test = open(tmp_file_link[1]).readline()
+        tree = ET.parse(tmp_file_link[1] + '.xml')
+        root = tree.getroot()
+        for hit in root.iter('Hit'):
+            hit_def = hit.find('Hit_def').text
+            identity = [float(e.text) for e in hit.iter('Hsp_identity')][0]
+            bit_score = [float(e.text) for e in hit.iter('Hsp_bit-score')][0]
+            hsp_length = [float(e.text) for e in hit.iter('Hsp_align-len')][0]
+            search_results[hit_def] = {'identity': identity,
+                                    'bit_score': bit_score,
+                                    'hsp_length': hsp_length}
+    return(search_results)

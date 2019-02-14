@@ -24,41 +24,6 @@ var capitalizeFirstLetter = function(string) {
     return(string.charAt(0).toUpperCase() + string.slice(1));
 }
 
-var formatChildRow = function(expression_data, row) {
-    var bngene_name = row.data().gene.replace(/<.+?>/g, '');
-    var atgene_name = row.data().arabidopsis.replace(/<.+?>/g, '');
-    for (gene_idx = 0; gene_idx < expression_data.length; gene_idx++) {
-        if (expression_data[gene_idx].gene == bngene_name) {
-            if (typeof expression_data[gene_idx].homology == 'undefined') {
-                return('<p>No <em>Arabidopsis thaliana</em> genes show sufficient sequence similarity.</p>');
-            } else {
-                var returnTableString =
-                    '<table class="table table-striped">' +
-                        '<tr>' +
-                            '<td>Arabidopsis</td>' +
-                            '<td>Abbreviation</td>' +
-                            '<td>BLAST Identity</td>' +
-                            '<td>BLAST HSP Bit Score</td>' +
-                            '<td>BLAST HSP Length</td>' +
-                        '</tr>'
-                expression_data[gene_idx].homology.forEach(function(entry) {
-                    var trClass = ''
-                    if (entry.agi.replace(/\.[0-9]/, '') == atgene_name.replace(/\.[0-9]/, '')) {trClass = 'warning';}
-                    if (entry.agi == atgene_name) {trClass = 'success';}
-                    returnTableString = returnTableString +
-                        '<tr class="' + trClass + '">' +
-                            '<td>' + entry.agi + '</td>' +
-                            '<td>' + entry.symbols.join('; ') + '</td>' +
-                            '<td>' + entry.identity + '</td>' +
-                            '<td>' + entry.hsp_bit_score + '</td>' +
-                            '<td>' + entry.length_of_hsp + '</td>' +
-                        '</tr>'})
-                return(returnTableString + '</table>')
-            }
-        }
-    }
-}
-
 var plot_graph = function(flipped, display_errors, min_max_arrays) {
     var aspect_ratio = plot_vars.aspect_ratio;
     var mobile_aspect_ratio = plot_vars.mobile_aspect_ratio;
