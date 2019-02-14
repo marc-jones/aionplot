@@ -1,0 +1,148 @@
+---
+- hosts: all
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: install core packages (git)
+      yum:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - git
+
+    - name: install firewalld
+      yum:
+        name: firewalld
+        state: present
+
+    - name: start and enable firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+      notify: restart docker daemon
+
+    - name: enable and persist http/https ports
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop: "{{ FIREWALLD_ALLOWED_SERVICES }}"
+      notify: restart docker daemon
+
+    - name: enable and persist extra ports
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop: "{{ FIREWALLD_ALLOWED_PORTS }}"
+      notify: restart docker daemon
+
+    - name: download get-pip.py
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /opt/get_pip.py
+      register: get_pip_downloaded
+
+    - name: install pip
+      command: python /opt/get_pip.py
+      when: get_pip_downloaded is changed
+
+    - name: clone the webapp repository
+      git:
+        repo: "{{ WEBAPP_GIT_REPO }}"
+        dest: /opt/aionplot
+
+    - name: install Docker dependencies
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+
+    - name: add the Docker repo
+      yum_repository:
+        name: dockerrepo
+        description: docker main repository
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+        enabled: 1
+        gpgkey: https://download.docker.com/linux/centos/gpg
+
+    - name: install the Docker engine
+      yum:
+        name: docker-ce
+      notify: restart docker daemon
+
+    - name: enable the Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: install Python docker module
+      pip:
+        name: docker
+
+    - name: create webapp network
+      docker_network:
+        name: webapp
+
+    - name: create mongo data directory
+      file:
+        path: "{{ MONGO_DATA_DIR }}"
+        state: directory
+        recurse: yes
+
+    - name: create mongo init config directory
+      file:
+        path: "{{ MONGO_INIT_CONFIG_DIR }}"
+        state: directory
+        recurse: yes
+
+    - name: generate mongo docker container startup script
+      template:
+        src: mongo_config.js
+        dest: "{{ MONGO_INIT_CONFIG_DIR }}"
+
+    - name: create mongo docker container
+      docker_container:
+        name: db
+        image: "{{ MONGO_IMAGE }}"
+        state: started
+        volumes:
+          - "{{ MONGO_DATA_DIR }}:/data/db"
+          - "{{ MONGO_INIT_CONFIG_DIR }}:/docker-entrypoint-initdb.d"
+        networks:
+          - name: webapp
+        env:
+          MONGO_INITDB_ROOT_USERNAME: "{{ MONGO_INITDB_ROOT_USERNAME }}"
+          MONGO_INITDB_ROOT_PASSWORD: "{{ MONGO_INITDB_ROOT_PASSWORD }}"
+
+    - name: create flaskapp docker container
+      docker_container:
+        name: web
+        image: "{{ AIONPLOT_FLASKAPP_IMAGE }}"
+        state: started
+        ports:
+          - "80:80"
+        networks:
+          - name: webapp
+        env:
+          WEBAPP_SECRET: "{{ WEBAPP_SECRET }}"
+          MONGO_HOSTNAME: db
+          MONGO_WEBAPP_USERNAME: "{{ MONGO_WEBAPP_USERNAME }}"
+          MONGO_WEBAPP_PASSWORD: "{{ MONGO_WEBAPP_PASSWORD }}"
+
+  handlers:
+    - name: restart docker daemon
+      service:
+        name: docker
+        state: restarted

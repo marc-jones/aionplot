@@ -1,0 +1,14 @@
+WEBAPP_GIT_REPO: https://bitbucket.org/marc-jones/aionplot.git
+AIONPLOT_FLASKAPP_IMAGE: "dmarcjones/aionplot-flaskapp"
+MONGO_IMAGE: "mongo:4.0.6"
+WEBAPP_SECRET: change_me
+MONGO_INITDB_ROOT_USERNAME: admin
+MONGO_INITDB_ROOT_PASSWORD: change_me
+MONGO_DATA_DIR: /opt/mongo/data
+MONGO_INIT_CONFIG_DIR: /opt/mongo/init_config
+MONGO_WEBAPP_USERNAME: web_user
+MONGO_WEBAPP_PASSWORD: change_me
+MONGO_DBADMIN_USERNAME: db_admin
+MONGO_DBADMIN_PASSWORD: change_me
+FIREWALLD_ALLOWED_SERVICES: [http, https]
+FIREWALLD_ALLOWED_PORTS: []
