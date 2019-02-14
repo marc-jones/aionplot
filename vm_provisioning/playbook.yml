@@ -85,7 +85,7 @@
     - name: create mongo docker container
       docker_container:
         name: db
-        image: "mongo:4.0.6" 
+        image: "{{ MONGO_IMAGE }}"
         state: started
         volumes:
           - "{{ MONGO_DATA_DIR }}:/data/db"
@@ -99,7 +99,7 @@
     - name: create flaskapp docker container
       docker_container:
         name: web
-        image: flaskapp
+        image: "{{ AIONPLOT_FLASKAPP_IMAGE }}"
         state: started
         ports:
           - "80:80"
