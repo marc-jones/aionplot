@@ -1,0 +1,37 @@
+---
+- hosts: all
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: clone the webapp repository
+      git:
+        repo: "{{ WEBAPP_GIT_REPO }}"
+        dest: /opt/aionplot
+
+    - name: build populator docker image
+      docker_image:
+        path: /opt/aionplot/mongo_populator_image
+        name: populator
+
+    - name: copy across data files
+      synchronize:
+        src: "{{ LOCAL_DATA_DIR }}/"
+        dest: "{{ SERVER_DATA_DIR }}"
+
+    - name: run populator
+      docker_container:
+        name: populator
+        image: "{{ AIONPLOT_POPULATOR_IMAGE }}"
+        volumes:
+          -  "{{ SERVER_CONTENT_DIR }}:/content"
+          -  "{{ SERVER_DATA_DIR }}:/data"
+        networks:
+          - name: webapp
+        env:
+          MONGO_DBADMIN_USERNAME: "{{ MONGO_DBADMIN_USERNAME }}"
+          MONGO_DBADMIN_PASSWORD: "{{ MONGO_DBADMIN_PASSWORD }}"
+        cleanup: True
+        detach: False
