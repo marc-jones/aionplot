@@ -47,6 +47,14 @@ Some useful commands while developing:
 docker run -it --network=flaskmongo_webapp -v /home/jonesd/Documents/order-data-files:/data -v ~/scratch/content:/content populator
 
 docker run -it --network=flaskmongo_webapp -v /home/jonesd/irwin_local/2018/2018_07_18_rna_seq/output:/data -v ~/scratch/content:/content populator
+
+cd webapp_image/ && \
+    docker build -t aionplot-flaskapp . && \
+    docker tag aionplot-flaskapp dmarcjones/aionplot-flaskapp:dev && \
+    docker push dmarcjones/aionplot-flaskapp:dev && \
+    cd ../vm_provisioning/ && \
+    ansible-playbook -i hosts playbook.yml --limit dev && \
+    cd ..
 ```
 
 To connect to the database:
