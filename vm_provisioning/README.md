@@ -21,6 +21,7 @@ WEBAPP_SECRET: change_me
 MONGO_INITDB_ROOT_PASSWORD: change_me
 MONGO_WEBAPP_PASSWORD: change_me
 MONGO_DBADMIN_PASSWORD: change_me
+LOCAL_DATA_DIR: ~/Documents/time-series-data-files
 ```
 
 ### Add the production server to be configured to a ``hosts`` file
@@ -94,4 +95,10 @@ change the passwords.
 
 ```
 ansible-playbook -i hosts playbook.yml --limit dev
+```
+
+### Populate the Mongo database
+
+```
+ansible-playbook -i hosts populator-playbook.yml --limit dev
 ```
