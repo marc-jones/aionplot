@@ -516,56 +516,58 @@ var addLegend = function(plotDetails, svgD3Selection)
 
     })
 
-    var groupsLegendGroup = svgD3Selection.append('g').attr('class',
-        'group_legend');
-    var groupsLegendKeys = groupsLegendGroup.selectAll('g')
-        .data(plotDetails.groupLabels).enter().append('g')
-        .attr('name', passThrough).classed('key', true);
+    if (plotDetails.numGroupsCols != 0 && plotDetails.numGroupsRows != 0) {
 
-    groupsLegendKeys.append('rect').attr('x', function(name, i) {
-        return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).x);})
-        .attr('y', function(name, i) {
-            return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).y);})
-        .attr('width', plot_vars.margin.legendline)
-        .attr('height', plot_vars.margin.legendline)
-        .attr('class', 'plotbackground');
+        var groupsLegendGroup = svgD3Selection.append('g').attr('class',
+            'group_legend');
+        var groupsLegendKeys = groupsLegendGroup.selectAll('g')
+            .data(plotDetails.groupLabels).enter().append('g')
+            .attr('name', passThrough).classed('key', true);
 
-    groupsLegendKeys.append('path').attr('transform', function(name, i) {
-        var position = returnGroupsPosition(plotDetails, i,
-            {x: plot_vars.margin.legendline / 2,
-            y: plot_vars.margin.legendline / 2});
-        return('translate(' + position.x + ',' + position.y + ')');})
-        .attr('d', d3.symbol().size(plot_vars.symbolSize).type(function(d) {
-            var idx = plotDetails.groupLabels.indexOf(d);
-            while (idx >= d3.symbols.length) {
-                idx = idx - d3.symbols.length;}
-            return(d3.symbols[idx]);}));
+        groupsLegendKeys.append('rect').attr('x', function(name, i) {
+            return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).x);})
+            .attr('y', function(name, i) {
+                return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).y);})
+            .attr('width', plot_vars.margin.legendline)
+            .attr('height', plot_vars.margin.legendline)
+            .attr('class', 'plotbackground');
 
-    groupsLegendKeys.append('line').attr('y1', function(name, i) {
-        return(returnGroupsPosition(plotDetails, i, {
-        x:plot_vars.margin.legendline +
-        plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
-        .attr('y2', function(name, i) {
-        return(returnGroupsPosition(plotDetails, i, {
-        x:plot_vars.margin.legendline +
-        plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
-        .attr('x1', function(name, i) {
-        return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).x);})
-        .attr('x2', function(name, i) {
-        return(returnGroupsPosition(plotDetails, i, {
-        x:plot_vars.margin.legendline, y:0}).x);});
+        groupsLegendKeys.append('path').attr('transform', function(name, i) {
+            var position = returnGroupsPosition(plotDetails, i,
+                {x: plot_vars.margin.legendline / 2,
+                y: plot_vars.margin.legendline / 2});
+            return('translate(' + position.x + ',' + position.y + ')');})
+            .attr('d', d3.symbol().size(plot_vars.symbolSize).type(function(d) {
+                var idx = plotDetails.groupLabels.indexOf(d);
+                while (idx >= d3.symbols.length) {
+                    idx = idx - d3.symbols.length;}
+                return(d3.symbols[idx]);}));
 
-    groupsLegendKeys.append('text')
-        .text(function(name) {
-            if (name == '') {return('No Group');} else {return(name);}})
-        .attr('alignment-baseline', 'middle').attr('x', function(name, i) {
+        groupsLegendKeys.append('line').attr('y1', function(name, i) {
             return(returnGroupsPosition(plotDetails, i, {
-            x:plot_vars.margin.legendline + plot_vars.margin.spacing,
-            y:plot_vars.margin.legendline / 2}).x);})
-        .attr('y', function(name, i) {return(returnGroupsPosition(
-            plotDetails, i, {x:plot_vars.margin.legendline +
-            plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
+            x:plot_vars.margin.legendline +
+            plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
+            .attr('y2', function(name, i) {
+            return(returnGroupsPosition(plotDetails, i, {
+            x:plot_vars.margin.legendline +
+            plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
+            .attr('x1', function(name, i) {
+            return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).x);})
+            .attr('x2', function(name, i) {
+            return(returnGroupsPosition(plotDetails, i, {
+            x:plot_vars.margin.legendline, y:0}).x);});
 
+        groupsLegendKeys.append('text')
+            .text(function(name) {
+                if (name == '') {return('No Group');} else {return(name);}})
+            .attr('alignment-baseline', 'middle').attr('x', function(name, i) {
+                return(returnGroupsPosition(plotDetails, i, {
+                x:plot_vars.margin.legendline + plot_vars.margin.spacing,
+                y:plot_vars.margin.legendline / 2}).x);})
+            .attr('y', function(name, i) {return(returnGroupsPosition(
+                plotDetails, i, {x:plot_vars.margin.legendline +
+                plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
+    }
 }
 
 var returnLegendPosition = function(plotDetails, idx, offset)

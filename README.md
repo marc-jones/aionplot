@@ -55,6 +55,15 @@ cd webapp_image/ && \
     cd ../vm_provisioning/ && \
     ansible-playbook -i hosts playbook.yml --limit dev && \
     cd ..
+
+cd mongo_populator_image/ && \
+    docker build -t aionplot-populator . && \
+    docker tag aionplot-populator dmarcjones/aionplot-populator:dev && \
+    docker push dmarcjones/aionplot-populator:dev && \
+    cd ../vm_provisioning/ && \
+    ansible-playbook -i hosts populator-playbook.yml --limit dev && \
+    cd ..
+
 ```
 
 To connect to the database:

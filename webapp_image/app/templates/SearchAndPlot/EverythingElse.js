@@ -80,36 +80,6 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
             .attr('height', plotHeight)
             .attr('class', 'vernalization');
 
-        // For each plot, add points and lines for each gene
-        individualPlots.each(function(plot_data, i) {
-            var symbols = d3.svg.symbol()
-                .size(symbolSize)
-                .type(function(d, i) {
-                    var idx = d.homology;
-                    while (idx >= d3.svg.symbolTypes.length) {
-                        idx = idx - d3.svg.symbolTypes.length}
-                    return(d3.svg.symbolTypes[idx]);});
-
-            genes.selectAll("path")
-                .data(function(gene, gene_idx) {
-                    var returnVal = gene['measurements']
-                        .filter(function(measurement) {return(
-                            measurement['accession'] == plot_data.accession &&
-                            measurement['tissue'] == plot_data.tissue);});
-                    returnVal.forEach(function(measurement) {
-                        return(measurement['homology'] =
-                            unique_homology.indexOf(
-                                homology_array[gene_idx]));})
-                    return(returnVal);})
-                .enter()
-                .append('path')
-                .attr("transform", function(d) {
-                    return("translate(" + plot_data.xScale(d.time) + "," +
-                        plot_data.yScale(d.fpkm) + ")");})
-                .attr("d", symbols)
-                .classed("point", true);
-
-        });
         var circle_dummy = d3.select('body')
             .append('div')
             .attr('class', 'ie_circle_radius')
@@ -139,47 +109,6 @@ var plot_graph = function(flipped, display_errors, min_max_arrays) {
                                 .attr('height', function() {return bbox.height;});});
 
         $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-
-
-        // add the arabidopsis agi codes
-        var agiLegend = legend.selectAll('g')
-                            .filter(function(d) {return false;})
-                            .data(unique_homology)
-                            .enter()
-                            .append('g')
-                            .attr('agi', function(gene){return gene;})
-                            .attr('class', 'key');
-
-        agiLegend.append('rect')
-                .attr('x', function(d, i) {while (i >= legendColumns) {i = i - legendColumns;}
-                                            return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i;})
-                .attr('y', function(d, i) {var n = 0;
-                                            while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                            return svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n-Math.ceil(exp_data.length / legendColumns));})
-                .attr('width', margin.legendline)
-                .attr('height', margin.legendline)
-                .attr('class', 'plotbackground');
-
-        var symbols = d3.svg.symbol()
-                            .size(symbolSize)
-                            .type(function(d, i) {while (i >= d3.svg.symbolTypes.length)
-                                                {i = i - d3.svg.symbolTypes.length}
-                                                return d3.svg.symbolTypes[i];});
-        agiLegend.append('path')
-                .attr("transform", function(d, i) {var n = 0;
-                                                    while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                                    return "translate(" + (svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i + (margin.legendline*0.5)) + "," + (svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n-Math.ceil(exp_data.length / legendColumns))  + (margin.legendline*0.5)) + ")"; })
-                .attr("d", symbols)
-                .classed("point", true);
-
-        agiLegend.append('text')
-                .text(function(d) {return d;})
-                .attr("text-anchor", "middle")
-                .attr('x', function(d, i) {while (i >= legendColumns) {i = i - legendColumns;}
-                                            return svgWidth*((1-legendWidthProportion)/2) + (margin.legendline + margin.spacing*2 + maxLegendLabelWidth)*i + margin.legendline + margin.spacing + Math.ceil(this.getComputedTextLength())/2})
-                .attr('y', function(d, i) {var n = 0;
-                                        while (i >= legendColumns) {i = i - legendColumns; n = n + 1;}
-                                        return svgHeight - (margin.legendline + margin.spacing)*(legendNumberOfLines-n-Math.ceil(exp_data.length / legendColumns))  + (margin.legendline*0.75);});
 
         // add vernalization
         var vernLegend = legend.selectAll('g')
