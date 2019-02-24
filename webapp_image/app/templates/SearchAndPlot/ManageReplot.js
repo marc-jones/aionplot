@@ -1,5 +1,4 @@
 $(document).on("replot", function() {
-
     var facet_selection = {};
     $('select').each(function() {facet_selection[$(this).attr('id')] = $(this).val();});
 
@@ -8,9 +7,9 @@ $(document).on("replot", function() {
 
     var filtered_measurement_data = [];
 
-    measurement_data.forEach(function(gene) {
+    measurement_data.forEach(function(record) {
         var filtered_measurements = [];
-        gene.measurements.forEach(function(measurement) {
+        record.measurements.forEach(function(measurement) {
             var parsed_measurement = {
                 time: measurement.time,
                 value: measurement.value,
@@ -41,7 +40,8 @@ $(document).on("replot", function() {
             }
         });
         if (filtered_measurements.length > 0) {
-            filtered_measurement_data.push({name: gene.name,
+            filtered_measurement_data.push({name: record.name,
+                group: record.group,
                 measurements: filtered_measurements});
         }
     });

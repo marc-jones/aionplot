@@ -24,18 +24,22 @@ def get_measurement_data(list_of_names):
     # the cache. usually this won't be the case, but if the user has more than
     # one instance of the app open, then it will be a problem. This is also
     # necessary if the user has turned off cookies
-    for name in list_of_names:
+    for name, group in list_of_names:
         if not name in cached_names:
             db = mungo_client['time_series']
             measurements_collection = db['measurements']
             break
     records = []
-    for name in list_of_names:
+    for name, group in list_of_names:
         if name in cached_names:
-            records.append(cache[cached_names.index(name)])
+            record_dict = cache[cached_names.index(name)]
+            record_dict['group'] = group
+            records.append(record_dict)
         else:
             search_results = [
                 res for res in measurements_collection.find({'name': name})]
+            for res in search_results:
+                res['group'] = group
             records += search_results
     for res in records:
         if '_id' in res.keys():
@@ -171,7 +175,8 @@ def postsearch():
 
 @app.route('/postcheckboxchange')
 def postcheckboxchange():
-    names = list(set(request.args.get('names').split(',')))
+    names = list(set([tuple(name_group.split(';'))
+        for name_group in request.args.get('names').split(',')]))
     measurement_data = get_measurement_data(names)
     return(jsonify(measurement_data))
 

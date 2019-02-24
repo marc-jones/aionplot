@@ -97,7 +97,7 @@ var returnPlotDetailsObject = function(measurement_data, svg)
     var svgWidth = parseInt(svg.attr('width'));
     var svgHeight = parseInt(svg.attr('height'));
 
-    // Determining the size of the legend
+    // Determining the size of the record legend
     var legendLabels = measurement_data.map(function(d) {return(d.name);});
     var maxLegendLabelWidth = returnMaximumLegendLabelWidth(legendLabels, svg);
     var numLegendCols = Math.floor(
@@ -105,6 +105,20 @@ var returnPlotDetailsObject = function(measurement_data, svg)
         (plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
         maxLegendLabelWidth));
     var numLegendRows = Math.ceil(measurement_data.length / numLegendCols);
+
+    // Determining the size of the groups legend
+    var groupLabels = unique(measurement_data.map(function(record) {
+        return(record.group);}));
+    var maxGroupsLabelWidth = returnMaximumLegendLabelWidth(groupLabels, svg);
+    var numGroupsCols = 0;
+    var numGroupsRows = 0;
+    if (!(groupLabels.length == 1 && groupLabels[0] == '')) {
+        numGroupsCols = Math.floor(
+            (svgWidth * plot_vars.legendWidthProportion) /
+            (plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
+            maxGroupsLabelWidth));
+        numGroupsRows = Math.ceil(groupLabels.length / numGroupsCols);
+    }
 
     // Determining the facets
     var rowLabels = unique([].concat(...measurement_data.map(function(record) {
@@ -121,11 +135,13 @@ var returnPlotDetailsObject = function(measurement_data, svg)
         plot_vars.margin.bottom -
         (plot_vars.margin.spacing * (rowLabels.length - 1)) -
         ((plot_vars.margin.legendline + plot_vars.margin.spacing) *
-        numLegendRows)) / rowLabels.length;
+        (numLegendRows + numGroupsRows))) / rowLabels.length;
 
     return({svgWidth: svgWidth, svgHeight: svgHeight,
         legendLabels: legendLabels, maxLegendLabelWidth: maxLegendLabelWidth,
         numLegendCols: numLegendCols, numLegendRows: numLegendRows,
+        groupLabels: groupLabels, maxGroupsLabelWidth: maxGroupsLabelWidth,
+        numGroupsCols: numGroupsCols, numGroupsRows: numGroupsRows,
         rowLabels: rowLabels, colLabels: colLabels, plotWidth: plotWidth,
         plotHeight: plotHeight});
 }
@@ -347,7 +363,6 @@ var addAxisAndLabels = function(plotDetails, plotObject, svgD3Selection)
 
 var addRecords = function(plotDetails, plotsD3Selection)
 {
-
     var recordSelection = plotsD3Selection.selectAll('g').filter('.record')
         .data(function(d) {return(d.records);})
         .enter().append('g').attr('name', function(d) {return(d.name);})
@@ -359,8 +374,13 @@ var addRecords = function(plotDetails, plotsD3Selection)
             var plotData = d3.select(this.parentNode.parentNode).datum();
             return("translate(" + plotData.xScaleFunc(d.time) + "," +
                 plotData.yScaleFunc(d.value) + ")");})
-        .classed('point', true).attr('d',
-            d3.symbol().size(plot_vars.symbolSize).type(d3.symbols[0]))
+        .classed('point', true)
+        .attr('d', d3.symbol().size(plot_vars.symbolSize).type(function(d) {
+            var idx = plotDetails.groupLabels.indexOf(
+                d3.select(this.parentNode).datum().group);
+            while (idx >= d3.symbols.length) {
+                idx = idx - d3.symbols.length;}
+            return(d3.symbols[idx]);}));
 
     recordSelection.append('path').classed('line', true).attr('d', function(d) {
         var plotData = d3.select(this.parentNode.parentNode).datum();
@@ -496,6 +516,56 @@ var addLegend = function(plotDetails, svgD3Selection)
 
     })
 
+    var groupsLegendGroup = svgD3Selection.append('g').attr('class',
+        'group_legend');
+    var groupsLegendKeys = groupsLegendGroup.selectAll('g')
+        .data(plotDetails.groupLabels).enter().append('g')
+        .attr('name', passThrough).classed('key', true);
+
+    groupsLegendKeys.append('rect').attr('x', function(name, i) {
+        return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).x);})
+        .attr('y', function(name, i) {
+            return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).y);})
+        .attr('width', plot_vars.margin.legendline)
+        .attr('height', plot_vars.margin.legendline)
+        .attr('class', 'plotbackground');
+
+    groupsLegendKeys.append('path').attr('transform', function(name, i) {
+        var position = returnGroupsPosition(plotDetails, i,
+            {x: plot_vars.margin.legendline / 2,
+            y: plot_vars.margin.legendline / 2});
+        return('translate(' + position.x + ',' + position.y + ')');})
+        .attr('d', d3.symbol().size(plot_vars.symbolSize).type(function(d) {
+            var idx = plotDetails.groupLabels.indexOf(d);
+            while (idx >= d3.symbols.length) {
+                idx = idx - d3.symbols.length;}
+            return(d3.symbols[idx]);}));
+
+    groupsLegendKeys.append('line').attr('y1', function(name, i) {
+        return(returnGroupsPosition(plotDetails, i, {
+        x:plot_vars.margin.legendline +
+        plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
+        .attr('y2', function(name, i) {
+        return(returnGroupsPosition(plotDetails, i, {
+        x:plot_vars.margin.legendline +
+        plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
+        .attr('x1', function(name, i) {
+        return(returnGroupsPosition(plotDetails, i, {x:0, y:0}).x);})
+        .attr('x2', function(name, i) {
+        return(returnGroupsPosition(plotDetails, i, {
+        x:plot_vars.margin.legendline, y:0}).x);});
+
+    groupsLegendKeys.append('text')
+        .text(function(name) {
+            if (name == '') {return('No Group');} else {return(name);}})
+        .attr('alignment-baseline', 'middle').attr('x', function(name, i) {
+            return(returnGroupsPosition(plotDetails, i, {
+            x:plot_vars.margin.legendline + plot_vars.margin.spacing,
+            y:plot_vars.margin.legendline / 2}).x);})
+        .attr('y', function(name, i) {return(returnGroupsPosition(
+            plotDetails, i, {x:plot_vars.margin.legendline +
+            plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
+
 }
 
 var returnLegendPosition = function(plotDetails, idx, offset)
@@ -506,7 +576,21 @@ var returnLegendPosition = function(plotDetails, idx, offset)
         plotDetails.maxLegendLabelWidth) * (idx - plotDetails.numLegendCols *
         Math.floor(idx / plotDetails.numLegendCols))) + offset.x,
         y: plotDetails.svgHeight - ((plot_vars.margin.legendline +
-        plot_vars.margin.spacing) * (plotDetails.numLegendRows -
+        plot_vars.margin.spacing) * (plotDetails.numGroupsRows +
+        plotDetails.numLegendRows -
         Math.floor(idx / plotDetails.numLegendCols))) + offset.y};
+    return(returnValue);
+}
+
+var returnGroupsPosition = function(plotDetails, idx, offset)
+{
+    var returnValue = {x:
+        (plotDetails.svgWidth * (1 - plot_vars.legendWidthProportion) / 2 ) +
+        ((plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
+        plotDetails.maxGroupsLabelWidth) * (idx - plotDetails.numGroupsCols *
+        Math.floor(idx / plotDetails.numGroupsCols))) + offset.x,
+        y: plotDetails.svgHeight - ((plot_vars.margin.legendline +
+        plot_vars.margin.spacing) * (plotDetails.numGroupsRows -
+        Math.floor(idx / plotDetails.numGroupsCols))) + offset.y};
     return(returnValue);
 }

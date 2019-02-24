@@ -3,10 +3,11 @@ $(document).on("change", "input[type='checkbox']", function() {
     var selected_names = '';
     $("input[type='checkbox'].record_checkbox").each(function( index, listItem ) {
         if (listItem.checked) {
+            var combined_name = listItem.value + ';' + listItem.getAttribute('group');
             if (selected_names === '') {
-                selected_names = listItem.value;
+                selected_names = combined_name;
             } else {
-                selected_names = selected_names + ',' + listItem.value;
+                selected_names = selected_names + ',' + combined_name;
             }
         }
     });
