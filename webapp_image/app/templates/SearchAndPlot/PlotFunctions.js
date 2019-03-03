@@ -3,7 +3,9 @@
 // field (string) and a measurements field (array). Each measurement is an
 // object with the fields col_facet, row_facet, time, value, hi, lo.
 // the element_selector indicates which element to build the graph in.
-var facet_plot = function(measurement_data, element_selector)
+// region_data allows parts of the graph to be shaded different colours, and is
+// optional
+var facet_plot = function(measurement_data, element_selector, region_data)
 {
     // Establish the size of the canvas
     var svgWidth = parseInt(d3.select(element_selector).style('width'), 10);
@@ -23,23 +25,17 @@ var facet_plot = function(measurement_data, element_selector)
     var plotDetails = returnPlotDetailsObject(measurement_data, svg);
 
     // Get the plot object
-    var plotObject = returnPlotObject(measurement_data, plotDetails);
+    var plotObject = returnPlotObject(measurement_data, region_data, plotDetails);
 
     var plotSelection = svg.selectAll('g').data(plotObject).enter().append('g')
         .classed('plot', true).attr('row', function(d) {return(d.rowLabel);})
         .attr('col', function(d) {return(d.colLabel);});
 
-//     console.log(plotSelection);
-
     createBackgrounds(plotDetails, plotSelection);
+    addRegions(plotDetails, plotSelection);
     addRecords(plotDetails, plotSelection);
     addAxisAndLabels(plotDetails, plotObject, svg);
     addLegend(plotDetails, svg);
-
-//     console.log(measurement_data);
-//     console.log(plotDetails);
-//     console.log(plotObject);
-
 }
 
 var sortTimePoints = function(measurement_data) {
@@ -146,7 +142,7 @@ var returnPlotDetailsObject = function(measurement_data, svg)
         plotHeight: plotHeight});
 }
 
-var returnPlotObject = function(measurement_data, plotDetails)
+var returnPlotObject = function(measurement_data, region_data, plotDetails)
 {
     var returnArray = [];
     for (rowIdx = 0; rowIdx < plotDetails.rowLabels.length; rowIdx++)
@@ -185,16 +181,49 @@ var returnPlotObject = function(measurement_data, plotDetails)
                     measurement.row_facet == plotDetails.rowLabels[rowIdx] &&
                     measurement.col_facet == plotDetails.colLabels[colIdx]);})
                 return(returnRecord);});
-
             var xScaleFunc = d3.scaleLinear().domain(d3.extent(colTimes))
                 .range([xPos, xPos + plotDetails.plotWidth]).nice();
             var yScaleFunc = d3.scaleLinear().domain(d3.extent(rowValues))
                 .range([yPos + plotDetails.plotHeight, yPos]).nice();
-
+            var plotRegions = [];
+            if (region_data != undefined) {
+                plotRegions = region_data
+                    .map(function(region) {
+                        var returnRegion = JSON.parse(JSON.stringify(region));
+                        ['x_min', 'x_max'].forEach(function(x_variabe) {
+                        if (parseFloat(returnRegion[x_variabe]) <=
+                            d3.min(xScaleFunc.domain()) ||
+                            returnRegion[x_variabe] == 'min') {
+                            returnRegion[x_variabe] = d3.min(xScaleFunc.domain());
+                        } else if (d3.max(xScaleFunc.domain()) <=
+                            parseFloat(returnRegion[x_variabe]) ||
+                            returnRegion[x_variabe] == 'max') {
+                            returnRegion[x_variabe] = d3.max(xScaleFunc.domain());
+                        }});
+                        ['y_min', 'y_max'].forEach(function(y_variabe) {
+                        if (parseFloat(returnRegion[y_variabe]) <=
+                            d3.min(yScaleFunc.domain()) ||
+                            returnRegion[y_variabe] == 'min') {
+                            returnRegion[y_variabe] = d3.min(yScaleFunc.domain());
+                        } else if (d3.max(yScaleFunc.domain()) <=
+                            parseFloat(returnRegion[y_variabe]) ||
+                            returnRegion[y_variabe] == 'max') {
+                            returnRegion[y_variabe] = d3.max(yScaleFunc.domain());
+                        }});
+                        return(returnRegion);})
+                    .filter(function(region) {
+                        var valid_facet = (
+                            region.row_facet == plotDetails.rowLabels[rowIdx] &&
+                            region.col_facet == plotDetails.colLabels[colIdx]);
+                        var visible = (
+                            region.x_min != region.x_max &&
+                            region.y_min != region.y_max);
+                        return(valid_facet && visible);});
+            }
             returnArray.push({plotRowIdx: plotRowIdx, plotColIdx: plotColIdx,
                 xPos: xPos, yPos: yPos, records: plotRecords,
-                xScaleFunc: xScaleFunc, yScaleFunc: yScaleFunc,
-                rowLabel: plotDetails.rowLabels[rowIdx],
+                regions: plotRegions, xScaleFunc: xScaleFunc,
+                yScaleFunc: yScaleFunc, rowLabel: plotDetails.rowLabels[rowIdx],
                 colLabel: plotDetails.colLabels[colIdx]});
         }
     }
@@ -434,6 +463,30 @@ var addRecords = function(plotDetails, plotsD3Selection)
         currentRecord.selectAll('path').filter('.line').attr('stroke', colour);
         currentRecord.selectAll('line[class^=error]').attr('stroke', colour);
     });
+}
+
+var addRegions = function(plotDetails, plotsD3Selection)
+{
+    var regionSelection = plotsD3Selection.selectAll('rect').filter('.region')
+        .data(function(d) {return(d.regions);})
+        .enter().append('rect').attr('name', function(d) {return(d.name);})
+        .attr('class', 'region')
+        .attr('x', function(d) {
+            var plotData = d3.select(this.parentNode).datum();
+            return(plotData.xScaleFunc(d.x_min));})
+        .attr('y', function(d) {
+            var plotData = d3.select(this.parentNode).datum();
+            return(plotData.yScaleFunc(d.y_max));})
+        .attr('width', function(d) {
+            var plotData = d3.select(this.parentNode).datum();
+            return(parseFloat(plotData.xScaleFunc(d.x_max)) -
+                plotData.xScaleFunc(d.x_min));})
+        .attr('height', function(d) {
+            var plotData = d3.select(this.parentNode).datum();
+            return(parseFloat(plotData.yScaleFunc(d.y_min)) -
+                plotData.yScaleFunc(d.y_max));})
+        .attr('fill', function(d) {return('#' + d.colour);})
+        .attr('fill-opacity', function(d) {return(d.alpha);});
 }
 
 var addLegend = function(plotDetails, svgD3Selection)

@@ -196,6 +196,24 @@ if os.path.isdir(user_content_folder_path):
 else:
     print('No user content, using defaults')
 
+plot_regions_data_path = os.path.join(os.environ['DATA_LOCATION'],
+    'plot_regions.tsv')
+if os.path.isfile(plot_regions_data_path):
+    flags_dict['regions'] = []
+    required_headers = ['name', 'x_min', 'x_max', 'y_min', 'y_max', 'colour',
+        'alpha']
+    with open(plot_regions_data_path) as f:
+        headers = f.readline().strip().split('\t')
+        assert(all([col_header in headers for col_header in required_headers]))
+        assert(all([col_header in facet_dict.keys() for col_header in headers
+            if not col_header in required_headers]))
+        for line in f:
+            line = line.strip().split('\t')
+            flags_dict['regions'].append({
+                headers[idx]: line[idx] for idx in range(len(headers))})
+else:
+    print('No plot region data')
+
 # Create the search terms collection
 search_terms_collection = db['search_terms']
 for document in search_terms_dict.values():

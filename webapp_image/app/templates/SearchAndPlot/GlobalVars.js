@@ -36,6 +36,11 @@ plot_vars = {
             y: {{ flags['y_axis_label']|tojson }}
         },
     {% endif %}
+    {% if 'regions' in flags.keys() %}
+        regions: {{ flags['regions']|tojson }},
+    {% else %}
+        regions: [],
+    {% endif %}
     displayErrors: false
 }
 
