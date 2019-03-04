@@ -22,8 +22,8 @@ var facet_plot = function(measurement_data, element_selector, region_data)
     measurement_data = sortTimePoints(measurement_data);
 
     // Get details about the plot, essentially, derived variables
-    var plotDetails = returnPlotDetailsObject(measurement_data, svg);
-
+    var plotDetails = returnPlotDetailsObject(measurement_data, region_data, svg);
+    console.log(plotDetails);
     // Get the plot object
     var plotObject = returnPlotObject(measurement_data, region_data, plotDetails);
 
@@ -88,7 +88,7 @@ var returnMaximumLegendLabelWidth = function(labels, svg)
     return(returnValue);
 }
 
-var returnPlotDetailsObject = function(measurement_data, svg)
+var returnPlotDetailsObject = function(measurement_data, region_data, svg)
 {
     var svgWidth = parseInt(svg.attr('width'));
     var svgHeight = parseInt(svg.attr('height'));
@@ -116,6 +116,30 @@ var returnPlotDetailsObject = function(measurement_data, svg)
         numGroupsRows = Math.ceil(groupLabels.length / numGroupsCols);
     }
 
+    // Determining the size of the regions legend
+    var uniqueRegions = [];
+    var maxRegionsLabelWidth = 0;
+    var numRegionsCols = 0;
+    var numRegionsRows = 0;
+    if (region_data != undefined) {
+        var regionIDs = region_data.map(function(region) {
+            return(region.name + region.colour + region.alpha);});
+        var uniqueRegionIDs = unique(regionIDs);
+        var uniqueIdxs = uniqueRegionIDs.map(function(uniqueID) {
+            return(regionIDs.indexOf(uniqueID));});
+        uniqueRegions = region_data.filter(function(region, idx) {
+            return(uniqueIdxs.indexOf(idx) != -1);});
+        var uniqueRegionLabels = uniqueRegions.map(function(region) {
+            return(region.name);});
+        maxRegionsLabelWidth = returnMaximumLegendLabelWidth(
+            uniqueRegionLabels, svg);
+        numRegionsCols = Math.floor(
+            (svgWidth * plot_vars.legendWidthProportion) /
+            (plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
+            maxRegionsLabelWidth));
+        numRegionsRows = Math.ceil(measurement_data.length / numRegionsCols);
+    }
+
     // Determining the facets
     var rowLabels = unique([].concat(...measurement_data.map(function(record) {
         return(unique(record.measurements.map(function(measurement) {
@@ -131,13 +155,15 @@ var returnPlotDetailsObject = function(measurement_data, svg)
         plot_vars.margin.bottom -
         (plot_vars.margin.spacing * (rowLabels.length - 1)) -
         ((plot_vars.margin.legendline + plot_vars.margin.spacing) *
-        (numLegendRows + numGroupsRows))) / rowLabels.length;
+        (numLegendRows + numGroupsRows + numRegionsRows))) / rowLabels.length;
 
     return({svgWidth: svgWidth, svgHeight: svgHeight,
         legendLabels: legendLabels, maxLegendLabelWidth: maxLegendLabelWidth,
         numLegendCols: numLegendCols, numLegendRows: numLegendRows,
         groupLabels: groupLabels, maxGroupsLabelWidth: maxGroupsLabelWidth,
         numGroupsCols: numGroupsCols, numGroupsRows: numGroupsRows,
+        uniqueRegions: uniqueRegions, maxRegionsLabelWidth: maxRegionsLabelWidth,
+        numRegionsCols: numRegionsCols, numRegionsRows: numRegionsRows,
         rowLabels: rowLabels, colLabels: colLabels, plotWidth: plotWidth,
         plotHeight: plotHeight});
 }
@@ -621,6 +647,35 @@ var addLegend = function(plotDetails, svgD3Selection)
                 plotDetails, i, {x:plot_vars.margin.legendline +
                 plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
     }
+
+    if (plotDetails.uniqueRegions.length != 0) {
+
+        var regionsLegendGroup = svgD3Selection.append('g').attr('class',
+            'region_legend');
+        var regionsLegendKeys = regionsLegendGroup.selectAll('g')
+            .data(plotDetails.uniqueRegions).enter().append('g')
+            .attr('name', function(d) {return(d.name + d.colour + d.alpha);})
+            .classed('key', true);
+
+        regionsLegendKeys.append('rect').attr('x', function(name, i) {
+            return(returnRegionsPosition(plotDetails, i, {x:0, y:0}).x);})
+            .attr('y', function(name, i) {
+                return(returnRegionsPosition(plotDetails, i, {x:0, y:0}).y);})
+            .attr('width', plot_vars.margin.legendline)
+            .attr('height', plot_vars.margin.legendline)
+            .attr('fill', function(d) {return('#' + d.colour);})
+            .attr('fill-opacity', function(d) {return(d.alpha);});
+
+        regionsLegendKeys.append('text')
+            .text(function(region) {return(region.name);})
+            .attr('alignment-baseline', 'middle').attr('x', function(region, i) {
+                return(returnRegionsPosition(plotDetails, i, {
+                x:plot_vars.margin.legendline + plot_vars.margin.spacing,
+                y:plot_vars.margin.legendline / 2}).x);})
+            .attr('y', function(region, i) {return(returnRegionsPosition(
+                plotDetails, i, {x:plot_vars.margin.legendline +
+                plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
+    }
 }
 
 var returnLegendPosition = function(plotDetails, idx, offset)
@@ -632,7 +687,7 @@ var returnLegendPosition = function(plotDetails, idx, offset)
         Math.floor(idx / plotDetails.numLegendCols))) + offset.x,
         y: plotDetails.svgHeight - ((plot_vars.margin.legendline +
         plot_vars.margin.spacing) * (plotDetails.numGroupsRows +
-        plotDetails.numLegendRows -
+        plotDetails.numLegendRows + plotDetails.numRegionsRows -
         Math.floor(idx / plotDetails.numLegendCols))) + offset.y};
     return(returnValue);
 }
@@ -645,7 +700,21 @@ var returnGroupsPosition = function(plotDetails, idx, offset)
         plotDetails.maxGroupsLabelWidth) * (idx - plotDetails.numGroupsCols *
         Math.floor(idx / plotDetails.numGroupsCols))) + offset.x,
         y: plotDetails.svgHeight - ((plot_vars.margin.legendline +
-        plot_vars.margin.spacing) * (plotDetails.numGroupsRows -
+        plot_vars.margin.spacing) * (plotDetails.numGroupsRows +
+        plotDetails.numRegionsRows -
         Math.floor(idx / plotDetails.numGroupsCols))) + offset.y};
+    return(returnValue);
+}
+
+var returnRegionsPosition = function(plotDetails, idx, offset)
+{
+    var returnValue = {x:
+        (plotDetails.svgWidth * (1 - plot_vars.legendWidthProportion) / 2 ) +
+        ((plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
+        plotDetails.maxRegionsLabelWidth) * (idx - plotDetails.numRegionsCols *
+        Math.floor(idx / plotDetails.numRegionsCols))) + offset.x,
+        y: plotDetails.svgHeight - ((plot_vars.margin.legendline +
+        plot_vars.margin.spacing) * (plotDetails.numRegionsRows -
+        Math.floor(idx / plotDetails.numRegionsCols))) + offset.y};
     return(returnValue);
 }
