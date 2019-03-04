@@ -21,11 +21,16 @@ var facet_plot = function(measurement_data, element_selector, region_data)
 
     measurement_data = sortTimePoints(measurement_data);
 
+    // Filter the regions for only those visible
+    var filteredRegionData = filterRegionData(measurement_data, region_data);
+
     // Get details about the plot, essentially, derived variables
-    var plotDetails = returnPlotDetailsObject(measurement_data, region_data, svg);
-    console.log(plotDetails);
+    var plotDetails = returnPlotDetailsObject(measurement_data,
+        filteredRegionData, svg);
+
     // Get the plot object
-    var plotObject = returnPlotObject(measurement_data, region_data, plotDetails);
+    var plotObject = returnPlotObject(measurement_data, filteredRegionData,
+        plotDetails);
 
     var plotSelection = svg.selectAll('g').data(plotObject).enter().append('g')
         .classed('plot', true).attr('row', function(d) {return(d.rowLabel);})
@@ -86,6 +91,83 @@ var returnMaximumLegendLabelWidth = function(labels, svg)
         return(Math.ceil(node.getComputedTextLength()));}))
     texts.remove();
     return(returnValue);
+}
+
+var filterRegionData = function(measurement_data, region_data)
+{
+    if (region_data == undefined) {return(undefined);}
+
+    var filteredRegions = [];
+
+    // Determining the facets
+    var rowLabels = unique([].concat(...measurement_data.map(function(record) {
+        return(unique(record.measurements.map(function(measurement) {
+        return(measurement.row_facet);})));})));
+    var colLabels = unique([].concat(...measurement_data.map(function(record) {
+        return(unique(record.measurements.map(function(measurement) {
+        return(measurement.col_facet);})));})));
+
+    for (rowIdx = 0; rowIdx < rowLabels.length; rowIdx++)
+    {
+        var rowValues = [];
+        if (plot_vars.displayErrors) {
+            rowValues = [].concat(...[].concat(...measurement_data.map(
+                function(record) {return(record.measurements.filter(
+                function(measurement) {return(
+                measurement.row_facet == rowLabels[rowIdx]);
+                }).map(function(measurement) {
+                return([measurement.hi, measurement.lo]);}));})));
+        } else {
+            rowValues = [].concat(...measurement_data.map(function(record) {
+                return(record.measurements.filter(function(measurement) {
+                return(measurement.row_facet == rowLabels[rowIdx]);
+                }).map(function(measurement) {return(measurement.value);}));}));
+        }
+        for (colIdx = 0; colIdx < colLabels.length; colIdx++)
+        {
+            var colTimes = [].concat(...measurement_data.map(function(record) {
+                return(record.measurements.filter(function(measurement) {
+                return(measurement.col_facet == colLabels[colIdx]);
+                }).map(function(measurement) {return(measurement.time);}));}));
+
+            var xScaleFunc = d3.scaleLinear().domain(d3.extent(colTimes)).nice();
+            var yScaleFunc = d3.scaleLinear().domain(d3.extent(rowValues)).nice();
+
+            var plotRegions = region_data.filter(
+                    function(region) {return(
+                    region.row_facet == rowLabels[rowIdx] &&
+                    region.col_facet == colLabels[colIdx]);})
+                .map(function(region) {
+                    var returnRegion = JSON.parse(JSON.stringify(region));
+                    ['x_min', 'x_max'].forEach(function(x_variabe) {
+                    if (parseFloat(returnRegion[x_variabe]) <=
+                        d3.min(xScaleFunc.domain()) ||
+                        returnRegion[x_variabe] == 'min') {
+                        returnRegion[x_variabe] = d3.min(xScaleFunc.domain());
+                    } else if (d3.max(xScaleFunc.domain()) <=
+                        parseFloat(returnRegion[x_variabe]) ||
+                        returnRegion[x_variabe] == 'max') {
+                        returnRegion[x_variabe] = d3.max(xScaleFunc.domain());
+                    }});
+                    ['y_min', 'y_max'].forEach(function(y_variabe) {
+                    if (parseFloat(returnRegion[y_variabe]) <=
+                        d3.min(yScaleFunc.domain()) ||
+                        returnRegion[y_variabe] == 'min') {
+                        returnRegion[y_variabe] = d3.min(yScaleFunc.domain());
+                    } else if (d3.max(yScaleFunc.domain()) <=
+                        parseFloat(returnRegion[y_variabe]) ||
+                        returnRegion[y_variabe] == 'max') {
+                        returnRegion[y_variabe] = d3.max(yScaleFunc.domain());
+                    }});
+                    return(returnRegion);})
+                .filter(function(region) {
+                    return(region.x_min != region.x_max &&
+                    region.y_min != region.y_max);});
+
+            filteredRegions = filteredRegions.concat(plotRegions);
+        }
+    }
+    return(filteredRegions);
 }
 
 var returnPlotDetailsObject = function(measurement_data, region_data, svg)
@@ -213,38 +295,9 @@ var returnPlotObject = function(measurement_data, region_data, plotDetails)
                 .range([yPos + plotDetails.plotHeight, yPos]).nice();
             var plotRegions = [];
             if (region_data != undefined) {
-                plotRegions = region_data
-                    .map(function(region) {
-                        var returnRegion = JSON.parse(JSON.stringify(region));
-                        ['x_min', 'x_max'].forEach(function(x_variabe) {
-                        if (parseFloat(returnRegion[x_variabe]) <=
-                            d3.min(xScaleFunc.domain()) ||
-                            returnRegion[x_variabe] == 'min') {
-                            returnRegion[x_variabe] = d3.min(xScaleFunc.domain());
-                        } else if (d3.max(xScaleFunc.domain()) <=
-                            parseFloat(returnRegion[x_variabe]) ||
-                            returnRegion[x_variabe] == 'max') {
-                            returnRegion[x_variabe] = d3.max(xScaleFunc.domain());
-                        }});
-                        ['y_min', 'y_max'].forEach(function(y_variabe) {
-                        if (parseFloat(returnRegion[y_variabe]) <=
-                            d3.min(yScaleFunc.domain()) ||
-                            returnRegion[y_variabe] == 'min') {
-                            returnRegion[y_variabe] = d3.min(yScaleFunc.domain());
-                        } else if (d3.max(yScaleFunc.domain()) <=
-                            parseFloat(returnRegion[y_variabe]) ||
-                            returnRegion[y_variabe] == 'max') {
-                            returnRegion[y_variabe] = d3.max(yScaleFunc.domain());
-                        }});
-                        return(returnRegion);})
-                    .filter(function(region) {
-                        var valid_facet = (
-                            region.row_facet == plotDetails.rowLabels[rowIdx] &&
-                            region.col_facet == plotDetails.colLabels[colIdx]);
-                        var visible = (
-                            region.x_min != region.x_max &&
-                            region.y_min != region.y_max);
-                        return(valid_facet && visible);});
+                plotRegions = region_data.filter(function(region) {
+                    return(region.row_facet == plotDetails.rowLabels[rowIdx] &&
+                    region.col_facet == plotDetails.colLabels[colIdx]);});
             }
             returnArray.push({plotRowIdx: plotRowIdx, plotColIdx: plotColIdx,
                 xPos: xPos, yPos: yPos, records: plotRecords,
