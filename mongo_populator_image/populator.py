@@ -113,6 +113,10 @@ if os.path.isfile(record_data_path):
                 search_terms_dict[line[headers.index('name')]]['label_status'] = line[headers.index('label_colour')]
             else:
                 search_terms_dict[line[headers.index('name')]]['label_status'] = 'default'
+            if 'nicknames' in headers:
+                search_terms_dict[line[headers.index('name')]]['nicknames'] = line[headers.index('nicknames')].split(',')
+            else:
+                search_terms_dict[line[headers.index('name')]]['nicknames'] = []
             table_information_dict.setdefault(line[headers.index('name')], {})
             for idx in range(len(headers)):
                 table_information_dict[line[headers.index('name')]][headers[idx]] = line[idx]
@@ -135,6 +139,10 @@ if os.path.isfile(group_data_path):
                 temp_entry_dict['label_status'] = line[headers.index('label_colour')]
             else:
                 temp_entry_dict['label_status'] = 'default'
+            if 'nicknames' in headers:
+                search_terms_dict[line[headers.index('group')]]['nicknames'] = list(
+                    set(line[headers.index('nicknames')].split(',')).union(
+                    set(search_terms_dict[line[headers.index('group')]]['nicknames'])))
             search_terms_dict[line[headers.index('group')]]['records'].append(temp_entry_dict)
             table_information_dict.setdefault(line[headers.index('name')], {})
             table_information_dict[line[headers.index('name')]].setdefault('groups', [])
