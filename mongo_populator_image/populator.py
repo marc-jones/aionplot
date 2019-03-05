@@ -38,25 +38,30 @@ flags_dict['timerange'] = [None, None]
 
 if os.path.isfile(time_series_data_path):
     measurements_dict = {}
+    required_headers = ['name', 'time', 'value', 'hi', 'lo']
     with open(time_series_data_path) as f:
         # Read header and check that the mandatory five fields are there
         headers = f.readline().strip().split('\t')
-        assert(headers[0:5]==['name', 'time', 'value', 'hi', 'lo'])
-        facet_dict = {headers[idx]: set([]) for idx in range(5, len(headers))}
+        assert(all([col_header in headers for col_header in required_headers]))
+        facet_dict = {headers[idx]: set([]) for idx in range(len(headers))
+            if not headers[idx] in required_headers}
         for line in f:
             line = line.strip().split('\t')
-            measurements_dict.setdefault(line[0],
-                {'name': line[0], 'measurements': []})
+            record_name = line[headers.index('name')]
+            measurements_dict.setdefault(record_name,
+                {'name': record_name, 'measurements': []})
             measurement_dict = {headers[idx]: line[idx] for idx in
-                range(1, len(line))}
-            for float_name in headers[1:5]:
+                range(len(line)) if not headers[idx] == 'name'}
+            for float_name in ['time', 'value', 'hi', 'lo']:
                 measurement_dict[float_name] = float(
                     measurement_dict[float_name])
-            measurements_dict[line[0]]['measurements'].append(
+            measurements_dict[record_name]['measurements'].append(
                 measurement_dict)
-            search_terms_dict[line[0]] = {'name': line[0], 'nicknames': [],
-                'term_type': 'direct', 'tooltip': '', 'label_status': 'default'}
-            for idx in range(5, len(line)):
+            search_terms_dict[record_name] = {'name': record_name,
+                'nicknames': [], 'term_type': 'direct', 'tooltip': '',
+                'label_status': 'default'}
+            for idx in [idx for idx in range(len(line))
+                if not headers[idx] in required_headers]:
                 facet_dict[headers[idx]].add(line[idx])
             if (flags_dict['timerange'][0] == None or
                 measurement_dict['time'] <= flags_dict['timerange'][0]):
