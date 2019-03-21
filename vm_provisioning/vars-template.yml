@@ -1,4 +1,3 @@
-WEBAPP_GIT_REPO: https://bitbucket.org/marc-jones/aionplot.git
 AIONPLOT_FLASKAPP_IMAGE: "dmarcjones/aionplot-flaskapp"
 AIONPLOT_POPULATOR_IMAGE: "dmarcjones/aionplot-populator"
 MONGO_IMAGE: "mongo:4.0.6"

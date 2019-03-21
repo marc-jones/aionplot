@@ -6,14 +6,6 @@
 
   tasks:
 
-    - name: install core packages (git)
-      yum:
-        name: "{{ packages }}"
-        state: present
-      vars:
-        packages:
-          - git
-
     - name: install firewalld
       yum:
         name: firewalld
@@ -53,11 +45,6 @@
     - name: install pip
       command: python /opt/get_pip.py
       when: get_pip_downloaded is changed
-
-    - name: clone the webapp repository
-      git:
-        repo: "{{ WEBAPP_GIT_REPO }}"
-        dest: /opt/aionplot
 
     - name: install Docker dependencies
       yum:
