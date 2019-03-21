@@ -97,6 +97,23 @@ change the passwords.
 ansible-playbook -i hosts playbook.yml --limit dev
 ```
 
+If you see an error message along the lines of:
+
+```
+Error: Package: 3:docker-ce-18.09.3-3.el7.x86_64 (dockerrepo)
+           Requires: container-selinux >= 2.9
+```
+
+it means that your CentOS 7 machine has not been configured to be able to find
+the ``container-selinux`` package required to install Docker. Instructions on
+how to install this manually can be found in this Stackoverflow comment
+https://stackoverflow.com/a/46209054.  Below is a sample command to run.
+
+```
+yum install -y http://mirror.centos.org/centos/7/extras/x86_64/Packages/container-selinux-2.74-1.el7.noarch.rpm
+```
+
+
 ### Populate the Mongo database
 
 ```
