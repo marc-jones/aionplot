@@ -9,6 +9,9 @@ var facet_plot = function(measurement_data, element_selector, region_data)
 {
     // Establish the size of the canvas
     var svgWidth = parseInt(d3.select(element_selector).style('width'), 10);
+    if (isNaN(svgWidth)) {
+        return;
+    }
     var svgHeight = returnSVGHeight(svgWidth);
 
     // Create a blank canvas

@@ -175,9 +175,12 @@ def postsearch():
 
 @app.route('/postcheckboxchange')
 def postcheckboxchange():
-    names = list(set([tuple(name_group.split(';'))
-        for name_group in request.args.get('names').split(',')]))
-    measurement_data = get_measurement_data(names)
+    measurement_data = []
+    raw_names = request.args.get('names')
+    if not raw_names == '':
+        names = list(set([tuple(name_group.split(';'))
+            for name_group in raw_names.split(',')]))
+        measurement_data = get_measurement_data(names)
     return(jsonify(measurement_data))
 
 @app.route('/autocomplete', methods=['GET'])

@@ -1,5 +1,9 @@
 // What to do when the checkboxes change
 $(document).on("change", "input[type='checkbox']", function() {
+    $.event.trigger({type: 'check_inputs'});
+});
+
+$(document).on("check_inputs", function() {
     var selected_names = '';
     $("input[type='checkbox'].record_checkbox").each(function( index, listItem ) {
         if (listItem.checked) {

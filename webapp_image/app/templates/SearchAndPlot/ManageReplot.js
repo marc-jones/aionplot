@@ -2,6 +2,8 @@ $(document).on("replot", function() {
     var facet_selection = {};
     $('select').each(function() {facet_selection[$(this).attr('id')] = $(this).val();});
 
+    var plot_element_selector = '#result_graph';
+
     var facets = plot_vars.facets;
     var facet_names = Object.keys(facets);
 
@@ -79,8 +81,8 @@ $(document).on("replot", function() {
                 filtered_region_data.push(parsed_region);
             }
         });
-        facet_plot(filtered_measurement_data, '#result_graph', filtered_region_data);
+        facet_plot(filtered_measurement_data, plot_element_selector, filtered_region_data);
     } else {
-        facet_plot(filtered_measurement_data, '#result_graph');
+        facet_plot(filtered_measurement_data, plot_element_selector);
     }
 });
