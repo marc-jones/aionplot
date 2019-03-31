@@ -6,6 +6,11 @@ import time
 import shutil
 import subprocess
 
+def check_validity_of_name(name):
+    for invalid_name in ['BLAST Hits']:
+        if name == invalid_name:
+            sys.exit(invalid_name + ' is a reserved name')
+
 dump_threshold = 10000
 
 last_time = time.time()
@@ -57,6 +62,7 @@ if os.path.isfile(time_series_data_path):
                     measurement_dict[float_name])
             measurements_dict[record_name]['measurements'].append(
                 measurement_dict)
+            check_validity_of_name(record_name)
             search_terms_dict[record_name] = {'name': record_name,
                 'nicknames': [], 'term_type': 'direct', 'tooltip': '',
                 'label_status': 'default'}
@@ -128,6 +134,7 @@ if os.path.isfile(group_data_path):
         assert('name' in headers and 'group' in headers)
         for line in f:
             line = line.strip().split('\t')
+            check_validity_of_name(line[headers.index('group')])
             search_terms_dict.setdefault(line[headers.index('group')],
                 {'name': line[headers.index('group')], 'nicknames': [], 'term_type': 'indirect', 'records': []})
             temp_entry_dict = {'name': line[headers.index('name')]}

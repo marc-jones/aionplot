@@ -74,7 +74,7 @@ def process_search_terms(search_terms, blast_terms):
                     'records': search_results[0]['records']
                 }
     if len(blast_terms) > 0:
-        results_dict['blast_hits'] = {
+        results_dict['BLAST Hits'] = {
             'heading': 'BLAST Hits',
             'subheading': '',
             'records': []
@@ -84,7 +84,7 @@ def process_search_terms(search_terms, blast_terms):
                 {'name': term})]
             if (len(search_results) == 1 and
                 search_results[0]['term_type'] == 'direct'):
-                results_dict['blast_hits']['records'].append({
+                results_dict['BLAST Hits']['records'].append({
                         'name': search_results[0]['name'],
                         'tooltip': search_results[0]['tooltip'],
                         'label_status': search_results[0]['label_status']
