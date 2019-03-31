@@ -153,11 +153,14 @@ if os.path.isfile(group_data_path):
             table_information_dict[line[headers.index('name')]]['groups'].append(temp_table_entry_dict)
 
 if os.path.isfile(record_data_path) or os.path.isfile(group_data_path):
+    flags_dict['groups_available'] = True
     for key in table_information_dict:
         measurements_collection.update(
             {'name': key},
             {'$set': {'table_details': table_information_dict[key]}},
             True)
+else:
+    flags_dict['groups_available'] = False
 
 website_info_path = os.path.join(os.environ['DATA_LOCATION'],
     'website_information.yaml')
@@ -192,14 +195,6 @@ if os.path.isfile(fasta_data_path):
 else:
     flags_dict['fasta_available'] = False
     print('FASTA file not found')
-
-groups_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
-if os.path.isfile(groups_data_path):
-    flags_dict['groups_available'] = True
-else:
-    flags_dict['groups_available'] = False
-    print('Groups file not found')
-
 
 user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
     'user_content')
