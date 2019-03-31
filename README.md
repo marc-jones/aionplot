@@ -1,52 +1,43 @@
-## Time series Docker instance
+# AionPlot: A platform for disseminating and visualizing time series data
 
-First, you have to build the flaskapp image with:
+AionPlot was made to allow for time series data, regardless of the origin, to be
+easily searched and visualized via a web interface.
+All you need to provide AionPlot is your time series data, and you can create
+a web server to allow your data to be shared with the community.
+Although there are particular features which are tailored towards the use of
+AionPlot for displaying gene expression data (such as being able to query the
+database using a BLAST search), any time series data can be plotted with
+AionPlot if supplied in the correct format.
 
-```
-cd webapp_image/
-docker build -t flaskapp .
-cd ..
-```
+## Input file format
 
-Then set up the populator image with:
+TODO
 
-```
-cd mongo_populator_image/
-docker build -t populator .
-cd ..
-```
+## Initialization
 
-Create the required directory structure:
+Please consult the file `vm_provisioning/README.md` for a detailed guide on how
+to set up both a local, development version and a production version of
+AionPlot.
+A local version is great for quickly searching and visualizing private datasets,
+whereas a public instance of AionPlot allows you to disseminate your dataset to
+others in the community.
 
-```
-mkdir -p ~/scratch/{content,mongo_data}
-```
+## Useful development commands
 
-Then, set up the stack with:
+### Rebuild Docker images and push to the development VM
 
-```
-docker swarm init
-docker stack deploy -c docker-compose.yml flaskmongo
-```
-
-In order to populate the MongoDB database, one can run the populator image. Currently the container looks for a file called `key_value_pairs` in the `/data` directory, which we are able to mount when creating the container:
-
-```
-docker run -it --network=flaskmongo_webapp -v <path_to_data_on_local_machine>:/data -v <path_to_content_on_local_machine>:/content populator
-```
-
-To update the server code:
-
-```
-cd webapp_image/ && docker build -t flaskapp . && cd .. && docker service update --force --image flaskapp flaskmongo_web
-```
-
-Some useful commands while developing:
+The following commands were useful while developing the system, to update the
+Docker images and push them to the development VM.
+Although they won't work for the average user, if you've forked the project,
+they will be of use.
+To make them work, however, you will have to change the references to my
+DockerHub ID (`dmarcjones`) to your own.
+Of note, both commands rely on `AIONPLOT_FLASKAPP_IMAGE` and
+`AIONPLOT_POPULATOR_IMAGE` being set to the same dev images you're pushing to
+DockerHub.
 
 ```
-docker run -it --network=flaskmongo_webapp -v /home/jonesd/Documents/order-data-files:/data -v ~/scratch/content:/content populator
-
-docker run -it --network=flaskmongo_webapp -v /home/jonesd/irwin_local/2018/2018_07_18_rna_seq/output:/data -v ~/scratch/content:/content populator
+# Update the dev image of the web server and apply it to the development VM
 
 cd webapp_image/ && \
     docker build -t aionplot-flaskapp . && \
@@ -55,6 +46,8 @@ cd webapp_image/ && \
     cd ../vm_provisioning/ && \
     ansible-playbook -i hosts playbook.yml --limit dev && \
     cd ..
+
+# Update the dev image of the populator and run it on the development VM
 
 cd mongo_populator_image/ && \
     docker build -t aionplot-populator . && \
@@ -66,13 +59,41 @@ cd mongo_populator_image/ && \
 
 ```
 
-To connect to the database:
+### Connecting to the database
+
+To connect to the database, you will first have to use `ssh` to connect to the
+server.
+If you want to connect to the development server, use:
 
 ```
-docker exec -it flaskmongo_db.xxxxxxx bash
+vagrant ssh
+```
 
-mongo
+Once in the server, run:
 
+```
+sudo docker container ls
+```
+
+This will display two running containers, the Flask app and the MongoDB
+database. Note the container ID of the MongoDB container, and run:
+
+```
+docker exec -it <mongo-container-id> bash
+```
+
+This will open up a new command line prompt.
+Running the following command using your variables set in the `vars.yml` file
+will initialize an interactive Mongo session.
+
+```
+mongo -u <MONGO_WEBAPP_USERNAME> -p <MONGO_WEBAPP_PASSWORD>
+```
+
+This will let you query the database directly, for example, to list all entries
+in the database (not recommended with big datasets!) run:
+
+```
 use time_series
 db.measurements.find({})
 ```
