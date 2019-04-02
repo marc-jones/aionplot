@@ -78,6 +78,17 @@
       pip:
         name: docker
 
+    - name: create the webapp group
+      group:
+        name: webapp
+        state: present
+
+    - name: add webapp user
+      user:
+        name: webapp
+        group: webapp
+        uid: 1001
+
     - name: create webapp network
       docker_network:
         name: webapp
@@ -85,28 +96,36 @@
     - name: create mongo data directory
       file:
         path: "{{ MONGO_DATA_DIR }}"
+        owner: webapp
+        group: webapp
         state: directory
         recurse: yes
 
     - name: create mongo init config directory
       file:
         path: "{{ MONGO_INIT_CONFIG_DIR }}"
+        owner: webapp
+        group: webapp
         state: directory
         recurse: yes
 
     - name: generate mongo docker container startup script
       template:
+        owner: webapp
+        group: webapp
         src: mongo_config.js
         dest: "{{ MONGO_INIT_CONFIG_DIR }}"
 
     - name: create mongo docker container
       docker_container:
         name: db
+        user: 1001
         image: "{{ MONGO_IMAGE }}"
         state: started
         volumes:
           - "{{ MONGO_DATA_DIR }}:/data/db"
           - "{{ MONGO_INIT_CONFIG_DIR }}:/docker-entrypoint-initdb.d"
+          - "/etc/passwd:/etc/passwd:ro"
         networks:
           - name: webapp
         env:
