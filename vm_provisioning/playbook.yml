@@ -135,6 +135,7 @@
     - name: create flaskapp docker container
       docker_container:
         name: web
+        user: 101
         image: "{{ AIONPLOT_FLASKAPP_IMAGE }}"
         pull: yes
         state: started

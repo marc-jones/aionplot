@@ -9,3 +9,5 @@ COPY /setup/app.conf /etc/nginx/conf.d/
 COPY ./app /app
 ENV CONTENT_LOCATION=/content
 RUN cat /app/templates/SearchAndPlot/*.js > /app/templates/SearchAndPlot.js
+RUN chown -R nginx:nginx /etc/nginx
+RUN chown -R nginx:nginx /app
