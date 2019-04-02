@@ -142,7 +142,7 @@
         volumes:
           -  "{{ SERVER_CONTENT_DIR }}:/content"
         ports:
-          - "80:80"
+          - "80:8080"
         networks:
           - name: webapp
         env:
