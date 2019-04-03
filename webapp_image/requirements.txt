@@ -3,3 +3,4 @@ pymongo
 markdown
 pyyaml
 pdfkit
+gunicorn
