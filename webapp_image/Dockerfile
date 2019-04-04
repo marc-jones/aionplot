@@ -21,6 +21,10 @@ COPY boot.sh boot.sh
 RUN chmod a+x boot.sh
 
 COPY app app
+RUN cat /app/templates/SearchAndPlot/*.js > /app/templates/SearchAndPlot.js
 
 EXPOSE 5000
+ENV CONTENT_LOCATION=/content
+
+WORKDIR /app
 ENTRYPOINT ["../boot.sh"]
