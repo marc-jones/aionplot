@@ -9,10 +9,6 @@ AionPlot for displaying gene expression data (such as being able to query the
 database using a BLAST search), any time series data can be plotted with
 AionPlot if supplied in the correct format.
 
-## Input file format
-
-TODO
-
 ## Initialization
 
 It's possible to set up both a local, development version and a production
@@ -171,6 +167,40 @@ variable in the `vars.yml` file.
 ```
 AIONPLOT_POPULATOR_IMAGE: <hub-user>/aionplot-populator:<tag>
 ```
+
+## Input file format
+
+All input files should be put into a single folder, which you then point the
+`LOCAL_DATA_DIR` variable in the `vars.yml` file towards. The files should be
+named as followed, and conform to the same formatting:
+
+### Essential: `time_series_data.tsv`
+
+This contains the actual time series data, and is the only essential file. At a
+minimum, this file should contain the following tab separated columns:
+
+```
+name	time	value	hi	lo
+```
+
+    - `name`: The name of the record (e.g. a gene name)
+    - `time`: The time value
+    - `value`: The measurement taken at this time (e.g. gene expression level)
+    - `hi`: Required to allow error bars to be plotted, the upper bound of the measurement
+    - `lo`: Required to allow error bars to be plotted, the lower bound of the measurement
+
+Any other columns present in this will be treated as facets to separate the
+data. For example, if you have different treatments you wish to compare from
+different cell lines, you may organise the data using the following columns:
+
+```
+name	time	value	hi	lo	Cell Line	Treatment
+gene1	22	64.7015	84.7443	44.6587	cell_line_1	Control
+gene1	22	70.8761	92.8078	48.9445	cell_line_1	Treatment_1
+...
+```
+
+TODO - Other files
 
 ## Useful development commands
 
