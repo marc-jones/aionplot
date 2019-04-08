@@ -82,6 +82,7 @@
       group:
         name: webapp
         state: present
+        gid: 1001
 
     - name: add webapp user
       user:
@@ -119,13 +120,12 @@
     - name: create mongo docker container
       docker_container:
         name: db
-        user: 1001
+        user: "1001:1001"
         image: "{{ MONGO_IMAGE }}"
         state: started
         volumes:
           - "{{ MONGO_DATA_DIR }}:/data/db"
           - "{{ MONGO_INIT_CONFIG_DIR }}:/docker-entrypoint-initdb.d"
-          - "/etc/passwd:/etc/passwd:ro"
         networks:
           - name: webapp
         env:
