@@ -6,6 +6,24 @@ import time
 import shutil
 import subprocess
 
+import os
+import psutil
+process = psutil.Process(os.getpid())
+
+start_time = time.time()
+
+def print_memory_usage():
+    mem_in_bytes = process.memory_info().rss
+    mem_in_gigabytes = float(mem_in_bytes) / (1024**3)
+    print("Memory usage: {} GiB".format(mem_in_gigabytes))
+
+
+def print_time_elapsed():
+    elapse_time = time.time() - start_time
+    elapsed_time_in_minutes = float(elapse_time) / 60
+    print("Elapsed time: {} mins".format(elapsed_time_in_minutes))
+
+
 def check_validity_of_name(name):
     for invalid_name in ['BLAST Hits']:
         if name == invalid_name:
@@ -75,30 +93,35 @@ if os.path.isfile(time_series_data_path):
             if (flags_dict['timerange'][1] == None or
                 flags_dict['timerange'][1] <= measurement_dict['time']):
                 flags_dict['timerange'][1] = measurement_dict['time']
-            if len(measurements_dict) > dump_threshold:
-                current_time = time.time()
-                print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
-                last_time = current_time
-                for name in measurements_dict:
-                    measurements_collection.update(
-                        {'name': measurements_dict[name]['name']},
-                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                        True)
-                measurements_dict = {}
-                current_time = time.time()
-                print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
-                last_time = current_time
-        current_time = time.time()
-        print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
-        last_time = current_time
+#            if len(measurements_dict) > dump_threshold:
+#                current_time = time.time()
+#                print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
+#                last_time = current_time
+#                for name in measurements_dict:
+#                    measurements_collection.update(
+#                        {'name': measurements_dict[name]['name']},
+#                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
+#                        True)
+#                measurements_dict = {}
+#                current_time = time.time()
+#                print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
+#                last_time = current_time
+#        current_time = time.time()
+#        print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
+#        last_time = current_time
         for name in measurements_dict:
             measurements_collection.update(
                 {'name': measurements_dict[name]['name']},
                 {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
                 True)
         measurements_dict = {}
+
 else:
     sys.exit('Time series data does not exist')
+
+print("Finished timeseries processing")
+print_memory_usage()
+print_time_elapsed()
 
 record_data_path = os.path.join(os.environ['DATA_LOCATION'], 'record_details.tsv')
 if os.path.isfile(record_data_path):
@@ -126,6 +149,10 @@ if os.path.isfile(record_data_path):
             table_information_dict.setdefault(line[headers.index('name')], {})
             for idx in range(len(headers)):
                 table_information_dict[line[headers.index('name')]][headers[idx]] = line[idx]
+
+print("Finished record details processing")
+print_memory_usage()
+print_time_elapsed()
 
 group_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
 if os.path.isfile(group_data_path):
@@ -169,6 +196,10 @@ if os.path.isfile(record_data_path) or os.path.isfile(group_data_path):
 else:
     flags_dict['groups_available'] = False
 
+print("Finished group details processing")
+print_memory_usage()
+print_time_elapsed()
+
 website_info_path = os.path.join(os.environ['DATA_LOCATION'],
     'website_information.yaml')
 website_info_defaults = {
@@ -189,6 +220,10 @@ else:
 for key in website_info_dict:
     flags_dict[key] = website_info_dict[key]
 
+print("Finished website information processing")
+print_memory_usage()
+print_time_elapsed()
+
 fasta_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'genes.fasta')
 blast_db_folder = os.path.join(os.environ['CONTENT_LOCATION'], 'blast_db')
@@ -204,6 +239,10 @@ else:
     flags_dict['fasta_available'] = False
     print('FASTA file not found')
 
+print("Finished blastdb processing")
+print_memory_usage()
+print_time_elapsed()
+
 user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
     'user_content')
 if os.path.isdir(user_content_folder_path):
@@ -211,6 +250,10 @@ if os.path.isdir(user_content_folder_path):
         os.path.join(os.environ['CONTENT_LOCATION'], 'user_content'))
 else:
     print('No user content, using defaults')
+
+print("Finished user content processing")
+print_memory_usage()
+print_time_elapsed()
 
 plot_regions_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'plot_regions.tsv')
@@ -230,10 +273,18 @@ if os.path.isfile(plot_regions_data_path):
 else:
     print('No plot region data')
 
+print("Finished plot regisons processing")
+print_memory_usage()
+print_time_elapsed()
+
 # Create the search terms collection
 search_terms_collection = db['search_terms']
 for document in search_terms_dict.values():
     search_terms_collection.insert(document)
+
+print("Finished search terms processing")
+print_memory_usage()
+print_time_elapsed()
 
 # Create the flags YAML
 yaml_path = os.path.join(os.environ['CONTENT_LOCATION'], 'flags.yaml')
@@ -242,3 +293,5 @@ flags_dict['facets'] = facet_dict
 yaml.dump(flags_dict, open(yaml_path, 'w'))
 
 print('Database filling complete')
+print_memory_usage()
+print_time_elapsed()
