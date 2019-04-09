@@ -193,7 +193,8 @@ fasta_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'genes.fasta')
 blast_db_folder = os.path.join(os.environ['CONTENT_LOCATION'], 'blast_db')
 if os.path.isfile(fasta_data_path):
-    os.mkdir(blast_db_folder)
+    if not os.path.isdir(blast_db_folder):
+        os.mkdir(blast_db_folder)
     shutil.copy(fasta_data_path, blast_db_folder)
     subprocess.call(['/usr/bin/blast_bin/makeblastdb',
                       '-in', os.path.join(blast_db_folder, 'genes.fasta'),
