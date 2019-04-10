@@ -246,6 +246,8 @@ print_time_elapsed()
 user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
     'user_content')
 if os.path.isdir(user_content_folder_path):
+    if not os.path.isdir(user_content_folder_path):
+        os.mkdir(user_content_folder_path)
     shutil.copytree(user_content_folder_path,
         os.path.join(os.environ['CONTENT_LOCATION'], 'user_content'))
 else:
