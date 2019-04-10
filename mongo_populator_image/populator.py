@@ -204,13 +204,16 @@ else:
     flags_dict['fasta_available'] = False
     print('FASTA file not found')
 
-user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
-    'user_content')
-if os.path.isdir(user_content_folder_path):
-    if not os.path.isdir(user_content_folder_path):
-        os.mkdir(user_content_folder_path)
-    shutil.copytree(user_content_folder_path,
-        os.path.join(os.environ['CONTENT_LOCATION'], 'user_content'))
+user_data_folder_path = os.path.join(os.environ['DATA_LOCATION'],
+if os.path.isdir(user_data_folder_path):
+
+    user_content_folder_path = os.path.join(os.environ['CONTENT_LOCATION'], 'user_content')
+
+    # Wipe out pre-existing user data.
+    if os.path.isdir(user_content_folder_path):
+        shutil.rmtree(user_content_folder_path)
+
+    shutil.copytree(user_data_folder_path, user_content_folder_path)
 else:
     print('No user content, using defaults')
 
