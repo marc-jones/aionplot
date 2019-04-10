@@ -24,5 +24,6 @@
         env:
           MONGO_DBADMIN_USERNAME: "{{ MONGO_DBADMIN_USERNAME }}"
           MONGO_DBADMIN_PASSWORD: "{{ MONGO_DBADMIN_PASSWORD }}"
+          POPULATOR_DUMP_THRESHOLD: "{{ POPULATOR_DUMP_THRESHOLD }}"
         cleanup: True
         detach: False
