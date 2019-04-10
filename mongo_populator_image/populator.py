@@ -250,13 +250,17 @@ print("Finished blastdb processing")
 print_memory_usage()
 print_time_elapsed()
 
-user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
+user_data_folder_path = os.path.join(os.environ['DATA_LOCATION'],
     'user_content')
-if os.path.isdir(user_content_folder_path):
-    if not os.path.isdir(user_content_folder_path):
-        os.mkdir(user_content_folder_path)
-    shutil.copytree(user_content_folder_path,
-        os.path.join(os.environ['CONTENT_LOCATION'], 'user_content'))
+if os.path.isdir(user_data_folder_path):
+
+    user_content_folder_path = os.path.join(os.environ['CONTENT_LOCATION'], 'user_content')
+
+    # Wipe out pre-existing user data.
+    if os.path.isdir(user_content_folder_path):
+        shutil.rmtree(user_content_folder_path)
+
+    shutil.copytree(user_data_folder_path, user_content_folder_path)
 else:
     print('No user content, using defaults')
 
