@@ -22,6 +22,7 @@ def print_time_elapsed():
     elapse_time = time.time() - start_time
     elapsed_time_in_minutes = float(elapse_time) / 60
     print("Elapsed time: {} mins".format(elapsed_time_in_minutes))
+    sys.stdout.flush()
 
 
 def check_validity_of_name(name):
