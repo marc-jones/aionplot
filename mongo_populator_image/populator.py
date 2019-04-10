@@ -29,7 +29,11 @@ def check_validity_of_name(name):
         if name == invalid_name:
             sys.exit(invalid_name + ' is a reserved name')
 
-dump_threshold = 10000
+print("Starting import")
+dump_threshold = os.environ.get('POPULATOR_DUMP_THRESHOLD', 10000)
+print("Dump threshold: {}".format(dump_threshold))
+print_memory_usage()
+print_time_elapsed()
 
 last_time = time.time()
 
@@ -93,22 +97,24 @@ if os.path.isfile(time_series_data_path):
             if (flags_dict['timerange'][1] == None or
                 flags_dict['timerange'][1] <= measurement_dict['time']):
                 flags_dict['timerange'][1] = measurement_dict['time']
-#            if len(measurements_dict) > dump_threshold:
-#                current_time = time.time()
-#                print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
-#                last_time = current_time
-#                for name in measurements_dict:
-#                    measurements_collection.update(
-#                        {'name': measurements_dict[name]['name']},
-#                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-#                        True)
-#                measurements_dict = {}
-#                current_time = time.time()
-#                print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
-#                last_time = current_time
-#        current_time = time.time()
-#        print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
-#        last_time = current_time
+            if len(measurements_dict) > dump_threshold:
+                print_memory_usage()
+                print_time_elapsed()
+                current_time = time.time()
+                print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
+                last_time = current_time
+                for name in measurements_dict:
+                    measurements_collection.update(
+                        {'name': measurements_dict[name]['name']},
+                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
+                        True)
+                measurements_dict = {}
+                current_time = time.time()
+                print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
+                last_time = current_time
+        current_time = time.time()
+        print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
+        last_time = current_time
         for name in measurements_dict:
             measurements_collection.update(
                 {'name': measurements_dict[name]['name']},
