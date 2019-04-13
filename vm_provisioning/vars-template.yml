@@ -1,6 +1,8 @@
 AIONPLOT_FLASKAPP_IMAGE: "dmarcjones/aionplot-flaskapp"
 AIONPLOT_POPULATOR_IMAGE: "dmarcjones/aionplot-populator"
 MONGO_IMAGE: "mongo:4.0.6"
+NGINX_IMAGE: "nginx:1.14.2"
+FLASKAPP_DOCKER_NAME: web
 WEBAPP_SECRET: change_me
 MONGO_INITDB_ROOT_USERNAME: admin
 MONGO_INITDB_ROOT_PASSWORD: change_me
@@ -15,3 +17,4 @@ FIREWALLD_ALLOWED_PORTS: []
 LOCAL_DATA_DIR: ~/Documents/time-series-data-files
 SERVER_DATA_DIR: /temp_data
 SERVER_CONTENT_DIR: /content
+NGINX_CONFIG_DIR: /etc/nginx/conf.d
