@@ -151,7 +151,7 @@
 
     - name: create nginx configuration directory
       file:
-        path: "{{ NGINX_CONF_DIR }}"
+        path: "{{ NGINX_CONFIG_DIR }}"
         owner: webapp
         group: webapp
         state: directory
@@ -160,7 +160,7 @@
     - name: create the nginx configuration
       template:
         src: nginx.conf
-        dest: "{{ NGINX_CONF_DIR }}/nginx.conf"
+        dest: "{{ NGINX_CONFIG_DIR }}/nginx.conf"
 
     - name: create nginx docker container
       docker_container:
@@ -169,7 +169,7 @@
         pull: yes
         state: started
         volumes:
-          -  "{{ NGINX_CONF_FILE }}:/etc/nginx/conf.d/default.conf"
+          -  "{{ NGINX_CONFIG_DIR }}/nginx.conf:/etc/nginx/conf.d/default.conf"
         ports:
           - "80:8080"
         networks:
