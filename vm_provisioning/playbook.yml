@@ -123,6 +123,8 @@
         user: "1001:1001"
         image: "{{ MONGO_IMAGE }}"
         state: started
+        restart_policy: "on-failure"
+        restart_retries: 5
         volumes:
           - "{{ MONGO_DATA_DIR }}:/data/db"
           - "{{ MONGO_INIT_CONFIG_DIR }}:/docker-entrypoint-initdb.d"
@@ -139,6 +141,8 @@
         image: "{{ AIONPLOT_FLASKAPP_IMAGE }}"
         pull: yes
         state: started
+        restart_policy: "on-failure"
+        restart_retries: 5
         volumes:
           -  "{{ SERVER_CONTENT_DIR }}:/content"
         networks:
@@ -168,6 +172,8 @@
         image: "{{ NGINX_IMAGE }}"
         pull: yes
         state: started
+        restart_policy: "on-failure"
+        restart_retries: 5
         volumes:
           -  "{{ NGINX_CONFIG_FILE }}:/etc/nginx/conf.d/default.conf"
         ports:
