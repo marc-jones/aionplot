@@ -11,7 +11,9 @@ def check_validity_of_name(name):
         if name == invalid_name:
             sys.exit(invalid_name + ' is a reserved name')
 
-dump_threshold = 10000
+print("Starting import")
+dump_threshold = os.environ.get('POPULATOR_DUMP_THRESHOLD', 10000)
+print("Dump threshold: {}".format(dump_threshold))
 
 last_time = time.time()
 
