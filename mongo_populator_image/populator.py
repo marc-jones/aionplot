@@ -12,7 +12,7 @@ def check_validity_of_name(name):
             sys.exit(invalid_name + ' is a reserved name')
 
 print("Starting import")
-dump_threshold = os.environ.get('POPULATOR_DUMP_THRESHOLD', 10000)
+dump_threshold = int(os.environ.get('POPULATOR_DUMP_THRESHOLD', 10000))
 print("Dump threshold: {}".format(dump_threshold))
 
 last_time = time.time()
@@ -207,14 +207,13 @@ else:
     print('FASTA file not found')
 
 user_data_folder_path = os.path.join(os.environ['DATA_LOCATION'],
+    'user_content')
 if os.path.isdir(user_data_folder_path):
-
-    user_content_folder_path = os.path.join(os.environ['CONTENT_LOCATION'], 'user_content')
-
+    user_content_folder_path = os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content')
     # Wipe out pre-existing user data.
     if os.path.isdir(user_content_folder_path):
         shutil.rmtree(user_content_folder_path)
-
     shutil.copytree(user_data_folder_path, user_content_folder_path)
 else:
     print('No user content, using defaults')
