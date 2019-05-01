@@ -199,6 +199,22 @@ fasta_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'genes.fasta')
 blast_db_folder = os.path.join(os.environ['CONTENT_LOCATION'], 'blast_db')
 if os.path.isfile(fasta_data_path):
+    fasta_dict = {}
+    with open(fasta_data_path) as fasta:
+        current_record = ''
+        for line in fasta:
+            if line.startswith('>'):
+                if len(fasta_dict) > dump_threshold:
+                    measurements_collection.bulk_write([
+                        UpdateOne({'_id': record_name},
+                            {'$set': {'sequence': fasta_dict[record_name]}},
+                            upsert=True)
+                        for record_name in fasta_dict.keys()])
+                    fasta_dict = {}
+                current_record = line.strip().replace('>', '')
+                fasta_dict[current_record] = ''
+            else:
+                fasta_dict[current_record] += line.strip()
     if not os.path.isdir(blast_db_folder):
         os.mkdir(blast_db_folder)
     shutil.copy(fasta_data_path, blast_db_folder)

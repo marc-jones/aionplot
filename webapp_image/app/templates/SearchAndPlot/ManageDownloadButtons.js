@@ -27,17 +27,21 @@ $(document).ready(function(){
         form.setAttribute('action', event.data);
         form.setAttribute('method', 'post');
         form.setAttribute('name', 'hiddenForm');
-        var checked_genes = [];
-        $("input[type='checkbox'].record_checkbox").each(
-            function(index, listItem) {
+        var selected_names = '';
+        $("input[type='checkbox'].record_checkbox").each(function( index, listItem ) {
             if (listItem.checked) {
-                checked_genes.push(listItem.value);
+                var combined_name = listItem.value + ';' + listItem.getAttribute('group');
+                if (selected_names === '') {
+                    selected_names = combined_name;
+                } else {
+                    selected_names = selected_names + ',' + combined_name;
+                }
             }
         });
         var checked_genes_element = document.createElement('input');
         checked_genes_element.setAttribute('type', 'hidden');
         checked_genes_element.setAttribute('name', 'checked_genes_element');
-        checked_genes_element.setAttribute('value', checked_genes.join());
+        checked_genes_element.setAttribute('value', selected_names);
 
         form.appendChild(checked_genes_element);
 

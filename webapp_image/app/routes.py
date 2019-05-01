@@ -212,30 +212,30 @@ def downloadpdf():
 
 @app.route('/downloadfasta', methods=['POST'])
 def downloadfasta():
-    return()
-    #db = mungo_client['darmor']
-    #fasta_collection = db['fasta']
-    #checked_genes = list(set(request.form['checked_genes_element'].split(',')))
-    #search_results = []
-    #for gene_name in checked_genes:
-        #search_results += [res for res in fasta_collection.find(
-            #{
-                #'gene': gene_name
-            #}
-        #)]
-    #response_string = ''
-    #for res in search_results:
-        #response_string += ''.join(['>', res['gene'], '\n',
-                                    #res['sequence'], '\n'])
-    #response = make_response(response_string)
-    #response.headers['Content-Disposition'] = (
-        #'attachment; filename=cdna_sequences.fasta')
-    #return response
+    measurement_data = []
+    raw_names = request.form['checked_genes_element']
+    if not raw_names == '':
+        names = list(set([tuple(name_group.split(';'))
+            for name_group in raw_names.split(',')]))
+        measurement_data = get_measurement_data(names)
+    response_string = ''
+    for record in measurement_data:
+        if 'sequence' in record.keys():
+            response_string += ''.join(
+                ['>', record['name'], '\n', record['sequence'], '\n'])
+    response = make_response(response_string)
+    response.headers['Content-Disposition'] = (
+        'attachment; filename=cdna_sequences.fasta')
+    return(response)
 
 @app.route('/downloadtsdata', methods=['POST'])
 def downloadtsdata():
-    checked_genes = list(set(request.form['checked_genes_element'].split(',')))
-    measurement_data = get_measurement_data(checked_genes)
+    measurement_data = []
+    raw_names = request.form['checked_genes_element']
+    if not raw_names == '':
+        names = list(set([tuple(name_group.split(';'))
+            for name_group in raw_names.split(',')]))
+        measurement_data = get_measurement_data(names)
     flags = get_flags()
     headers = ['name', 'time', 'value', 'hi', 'lo'] + flags['facets'].keys()
     response_string = '\t'.join(headers) + '\n'
@@ -247,22 +247,6 @@ def downloadtsdata():
     response.headers['Content-Disposition'] = (
         'attachment; filename=time_series_data.tsv')
     return(response)
-
-#def returnBrassicaGeneLabelType(agi, agiQuery):
-    #classLabel = 'default'
-    #if re.sub('\.[0-9]', '', agiQuery) in agi:
-        #classLabel = 'warning'
-    #if agi == agiQuery:
-        #classLabel = 'success'
-    #return(classLabel)
-
-#def returnArabidopsisSymbols(agi, homology_list):
-    #symbols = ''
-    #for homology_entry in homology_list:
-        #if homology_entry['agi'] == agi:
-            #symbols = '; '.join(homology_entry['symbols'])
-            #return(symbols)
-    #return(symbols)
 
 def blastquery(query_sequence):
     search_results = {}
