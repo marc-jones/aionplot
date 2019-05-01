@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 import os
 import yaml
 import sys
@@ -81,11 +81,13 @@ if os.path.isfile(time_series_data_path):
                 current_time = time.time()
                 print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
                 last_time = current_time
-                for name in measurements_dict:
-                    measurements_collection.update(
-                        {'name': measurements_dict[name]['name']},
-                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                        True)
+                measurements_collection.bulk_write([
+                    UpdateOne({'_id': measurements_dict[name]['name']},
+                        {'$push': {'measurements': {'$each':
+                        measurements_dict[name]['measurements']}},
+                        '$set': {'name': measurements_dict[name]['name']}},
+                        upsert=True)
+                    for name in measurements_dict])
                 measurements_dict = {}
                 current_time = time.time()
                 print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
@@ -93,11 +95,13 @@ if os.path.isfile(time_series_data_path):
         current_time = time.time()
         print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
         last_time = current_time
-        for name in measurements_dict:
-            measurements_collection.update(
-                {'name': measurements_dict[name]['name']},
-                {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                True)
+        measurements_collection.bulk_write([
+            UpdateOne({'_id': measurements_dict[name]['name']},
+                {'$push': {'measurements': {'$each':
+                measurements_dict[name]['measurements']}},
+                '$set': {'name': measurements_dict[name]['name']}},
+                upsert=True)
+            for name in measurements_dict])
         measurements_dict = {}
 else:
     sys.exit('Time series data does not exist')
@@ -163,11 +167,11 @@ if os.path.isfile(group_data_path):
 
 if os.path.isfile(record_data_path) or os.path.isfile(group_data_path):
     flags_dict['groups_available'] = True
-    for key in table_information_dict:
-        measurements_collection.update(
-            {'name': key},
+    measurements_collection.bulk_write([
+        UpdateOne({'_id': key},
             {'$set': {'table_details': table_information_dict[key]}},
-            True)
+            upsert=True)
+        for key in table_information_dict])
 else:
     flags_dict['groups_available'] = False
 
