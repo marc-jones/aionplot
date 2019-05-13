@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 import os
 import yaml
 import sys
@@ -11,7 +11,9 @@ def check_validity_of_name(name):
         if name == invalid_name:
             sys.exit(invalid_name + ' is a reserved name')
 
-dump_threshold = 10000
+print("Starting import")
+dump_threshold = int(os.environ.get('POPULATOR_DUMP_THRESHOLD', 10000))
+print("Dump threshold: {}".format(dump_threshold))
 
 last_time = time.time()
 
@@ -35,6 +37,7 @@ db = mungo_client['time_series']
 
 # Create the measurements collection
 measurements_collection = db['measurements']
+search_terms_collection = db['search_terms']
 
 time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'time_series_data.tsv')
@@ -63,9 +66,9 @@ if os.path.isfile(time_series_data_path):
             measurements_dict[record_name]['measurements'].append(
                 measurement_dict)
             check_validity_of_name(record_name)
-            search_terms_dict[record_name] = {'name': record_name,
-                'nicknames': [], 'term_type': 'direct', 'tooltip': '',
-                'label_status': 'default'}
+            search_terms_dict[record_name] = {'_id': record_name,
+                'name': record_name, 'nicknames': [], 'term_type': 'direct',
+                'tooltip': '', 'label_status': 'default'}
             for idx in [idx for idx in range(len(line))
                 if not headers[idx] in required_headers]:
                 facet_dict[headers[idx]].add(line[idx])
@@ -79,11 +82,13 @@ if os.path.isfile(time_series_data_path):
                 current_time = time.time()
                 print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
                 last_time = current_time
-                for name in measurements_dict:
-                    measurements_collection.update(
-                        {'name': measurements_dict[name]['name']},
-                        {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                        True)
+                measurements_collection.bulk_write([
+                    UpdateOne({'_id': measurements_dict[name]['name']},
+                        {'$push': {'measurements': {'$each':
+                        measurements_dict[name]['measurements']}},
+                        '$set': {'name': measurements_dict[name]['name']}},
+                        upsert=True)
+                    for name in measurements_dict])
                 measurements_dict = {}
                 current_time = time.time()
                 print('Dumped! Time to dump: %s seconds' % (current_time - last_time))
@@ -91,11 +96,13 @@ if os.path.isfile(time_series_data_path):
         current_time = time.time()
         print('Beginning dump. Time since last dump: %s seconds' % (current_time - last_time))
         last_time = current_time
-        for name in measurements_dict:
-            measurements_collection.update(
-                {'name': measurements_dict[name]['name']},
-                {'$push': {'measurements': {'$each': measurements_dict[name]['measurements']}}},
-                True)
+        measurements_collection.bulk_write([
+            UpdateOne({'_id': measurements_dict[name]['name']},
+                {'$push': {'measurements': {'$each':
+                measurements_dict[name]['measurements']}},
+                '$set': {'name': measurements_dict[name]['name']}},
+                upsert=True)
+            for name in measurements_dict])
         measurements_dict = {}
 else:
     sys.exit('Time series data does not exist')
@@ -127,6 +134,20 @@ if os.path.isfile(record_data_path):
             for idx in range(len(headers)):
                 table_information_dict[line[headers.index('name')]][headers[idx]] = line[idx]
 
+# Create the search terms collection
+for document in search_terms_dict.values():
+    search_terms_collection.insert(document)
+    search_terms_dict = {}
+
+if os.path.isfile(record_data_path):
+    measurements_collection.bulk_write([
+        UpdateOne({'_id': key},
+            {'$set': {'table_details': table_information_dict[key]}},
+            upsert=True)
+        for key in table_information_dict])
+    table_information_dict = {}
+
+last_time = time.time()
 group_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
 if os.path.isfile(group_data_path):
     with open(group_data_path) as f:
@@ -136,7 +157,8 @@ if os.path.isfile(group_data_path):
             line = line.strip().split('\t')
             check_validity_of_name(line[headers.index('group')])
             search_terms_dict.setdefault(line[headers.index('group')],
-                {'name': line[headers.index('group')], 'nicknames': [], 'term_type': 'indirect', 'records': []})
+                {'name': line[headers.index('group')], 'nicknames': [],
+                'term_type': 'indirect', 'records': []})
             temp_entry_dict = {'name': line[headers.index('name')]}
             if 'label_tooltip' in headers:
                 temp_entry_dict['tooltip'] = line[headers.index('label_tooltip')]
@@ -151,21 +173,68 @@ if os.path.isfile(group_data_path):
                     set(line[headers.index('nicknames')].split(',')).union(
                     set(search_terms_dict[line[headers.index('group')]]['nicknames'])))
             search_terms_dict[line[headers.index('group')]]['records'].append(temp_entry_dict)
+            # Table information dict
             table_information_dict.setdefault(line[headers.index('name')], {})
-            table_information_dict[line[headers.index('name')]].setdefault('groups', [])
+            table_information_dict[line[headers.index('name')]].setdefault(
+                'groups', [])
             temp_table_entry_dict = {}
             for idx in range(len(headers)):
                 if not headers[idx] == 'name':
                     temp_table_entry_dict[headers[idx]] = line[idx]
             table_information_dict[line[headers.index('name')]]['groups'].append(temp_table_entry_dict)
+            if (len(search_terms_dict.keys()) +
+                len(table_information_dict.keys())) > dump_threshold:
+                current_time = time.time()
+                print('Beginning search and table terms dump. Time since last dump: %s seconds' % (current_time - last_time))
+                last_time = current_time
+                search_terms_collection.bulk_write([
+                    UpdateOne({'_id': search_terms_dict[name]['name']},
+                        {'$push': {'records': {'$each':
+                            search_terms_dict[name]['records']}},
+                        '$set': {'name': search_terms_dict[name]['name'],
+                            'nicknames': search_terms_dict[name]['nicknames'],
+                            'term_type': search_terms_dict[name]['term_type']}},
+                        upsert=True)
+                    for name in search_terms_dict])
+                search_terms_dict = {}
+                measurements_collection.bulk_write([
+                    UpdateOne({'_id': name},
+                        {'$push': {'table_details.groups': {'$each':
+                            table_information_dict[name]['groups']}}},
+                        upsert=True)
+                    for name in table_information_dict])
+                table_information_dict = {}
+                current_time = time.time()
+                print('Dumped! Time to dump: %s seconds' %
+                      (current_time - last_time))
+                last_time = current_time
+        current_time = time.time()
+        print('Beginning search and table terms dump. Time since last dump: %s seconds' % (current_time - last_time))
+        last_time = current_time
+        search_terms_collection.bulk_write([
+            UpdateOne({'_id': search_terms_dict[name]['name']},
+                {'$push': {'records': {'$each':
+                    search_terms_dict[name]['records']}},
+                '$set': {'name': search_terms_dict[name]['name'],
+                    'nicknames': search_terms_dict[name]['nicknames'],
+                    'term_type': search_terms_dict[name]['term_type']}},
+                upsert=True)
+            for name in search_terms_dict])
+        search_terms_dict = {}
+        measurements_collection.bulk_write([
+            UpdateOne({'_id': name},
+                {'$push': {'table_details.groups': {'$each':
+                    table_information_dict[name]['groups']}}},
+                upsert=True)
+            for name in table_information_dict])
+        table_information_dict = {}
+        current_time = time.time()
+        print('Dumped! Time to dump: %s seconds' %
+                (current_time - last_time))
+        last_time = current_time
 
 if os.path.isfile(record_data_path) or os.path.isfile(group_data_path):
     flags_dict['groups_available'] = True
-    for key in table_information_dict:
-        measurements_collection.update(
-            {'name': key},
-            {'$set': {'table_details': table_information_dict[key]}},
-            True)
 else:
     flags_dict['groups_available'] = False
 
@@ -193,7 +262,24 @@ fasta_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'genes.fasta')
 blast_db_folder = os.path.join(os.environ['CONTENT_LOCATION'], 'blast_db')
 if os.path.isfile(fasta_data_path):
-    os.mkdir(blast_db_folder)
+    fasta_dict = {}
+    with open(fasta_data_path) as fasta:
+        current_record = ''
+        for line in fasta:
+            if line.startswith('>'):
+                if len(fasta_dict) > dump_threshold:
+                    measurements_collection.bulk_write([
+                        UpdateOne({'_id': record_name},
+                            {'$set': {'sequence': fasta_dict[record_name]}},
+                            upsert=True)
+                        for record_name in fasta_dict.keys()])
+                    fasta_dict = {}
+                current_record = line.strip().replace('>', '')
+                fasta_dict[current_record] = ''
+            else:
+                fasta_dict[current_record] += line.strip()
+    if not os.path.isdir(blast_db_folder):
+        os.mkdir(blast_db_folder)
     shutil.copy(fasta_data_path, blast_db_folder)
     subprocess.call(['/usr/bin/blast_bin/makeblastdb',
                       '-in', os.path.join(blast_db_folder, 'genes.fasta'),
@@ -203,11 +289,15 @@ else:
     flags_dict['fasta_available'] = False
     print('FASTA file not found')
 
-user_content_folder_path = os.path.join(os.environ['DATA_LOCATION'],
+user_data_folder_path = os.path.join(os.environ['DATA_LOCATION'],
     'user_content')
-if os.path.isdir(user_content_folder_path):
-    shutil.copytree(user_content_folder_path,
-        os.path.join(os.environ['CONTENT_LOCATION'], 'user_content'))
+if os.path.isdir(user_data_folder_path):
+    user_content_folder_path = os.path.join(os.environ['CONTENT_LOCATION'],
+        'user_content')
+    # Wipe out pre-existing user data.
+    if os.path.isdir(user_content_folder_path):
+        shutil.rmtree(user_content_folder_path)
+    shutil.copytree(user_data_folder_path, user_content_folder_path)
 else:
     print('No user content, using defaults')
 
@@ -228,11 +318,6 @@ if os.path.isfile(plot_regions_data_path):
                 headers[idx]: line[idx] for idx in range(len(headers))})
 else:
     print('No plot region data')
-
-# Create the search terms collection
-search_terms_collection = db['search_terms']
-for document in search_terms_dict.values():
-    search_terms_collection.insert(document)
 
 # Create the flags YAML
 yaml_path = os.path.join(os.environ['CONTENT_LOCATION'], 'flags.yaml')
