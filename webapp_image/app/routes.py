@@ -37,7 +37,7 @@ def get_measurement_data(list_of_names):
             records.append(record_dict)
         else:
             search_results = [
-                res for res in measurements_collection.find({'name': name})]
+                res for res in measurements_collection.find({'_id': name})]
             for res in search_results:
                 res['group'] = group
             records += search_results
@@ -55,7 +55,7 @@ def process_search_terms(search_terms, blast_terms):
     results_dict = {}
     for term in search_terms:
         search_results = [res for res in search_terms_collection.find(
-            {'name': term})]
+            {'_id': term})]
         if (len(search_results) == 1 and
             search_results[0]['term_type'] == 'direct'):
             results_dict[term] = {
@@ -81,7 +81,7 @@ def process_search_terms(search_terms, blast_terms):
         }
         for term in blast_terms:
             search_results = [res for res in search_terms_collection.find(
-                {'name': term})]
+                {'_id': term})]
             if (len(search_results) == 1 and
                 search_results[0]['term_type'] == 'direct'):
                 results_dict['BLAST Hits']['records'].append({
@@ -190,7 +190,7 @@ def autocomplete():
     search_terms_collection = db['search_terms']
     regx = re.compile('^' + search_term, re.IGNORECASE)
     search_results = [{'name': res['name'], 'nicknames': res['nicknames']}
-        for res in search_terms_collection.find({ '$or': [{'name': regx},
+        for res in search_terms_collection.find({ '$or': [{'_id': regx},
         {'nicknames': {'$in': [regx]}}]}).limit(20)]
     return(jsonify(json_list=search_results))
 

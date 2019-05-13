@@ -37,6 +37,7 @@ db = mungo_client['time_series']
 
 # Create the measurements collection
 measurements_collection = db['measurements']
+search_terms_collection = db['search_terms']
 
 time_series_data_path = os.path.join(os.environ['DATA_LOCATION'],
     'time_series_data.tsv')
@@ -65,9 +66,9 @@ if os.path.isfile(time_series_data_path):
             measurements_dict[record_name]['measurements'].append(
                 measurement_dict)
             check_validity_of_name(record_name)
-            search_terms_dict[record_name] = {'name': record_name,
-                'nicknames': [], 'term_type': 'direct', 'tooltip': '',
-                'label_status': 'default'}
+            search_terms_dict[record_name] = {'_id': record_name,
+                'name': record_name, 'nicknames': [], 'term_type': 'direct',
+                'tooltip': '', 'label_status': 'default'}
             for idx in [idx for idx in range(len(line))
                 if not headers[idx] in required_headers]:
                 facet_dict[headers[idx]].add(line[idx])
@@ -133,6 +134,20 @@ if os.path.isfile(record_data_path):
             for idx in range(len(headers)):
                 table_information_dict[line[headers.index('name')]][headers[idx]] = line[idx]
 
+# Create the search terms collection
+for document in search_terms_dict.values():
+    search_terms_collection.insert(document)
+    search_terms_dict = {}
+
+if os.path.isfile(record_data_path):
+    measurements_collection.bulk_write([
+        UpdateOne({'_id': key},
+            {'$set': {'table_details': table_information_dict[key]}},
+            upsert=True)
+        for key in table_information_dict])
+    table_information_dict = {}
+
+last_time = time.time()
 group_data_path = os.path.join(os.environ['DATA_LOCATION'], 'groups.tsv')
 if os.path.isfile(group_data_path):
     with open(group_data_path) as f:
@@ -142,7 +157,8 @@ if os.path.isfile(group_data_path):
             line = line.strip().split('\t')
             check_validity_of_name(line[headers.index('group')])
             search_terms_dict.setdefault(line[headers.index('group')],
-                {'name': line[headers.index('group')], 'nicknames': [], 'term_type': 'indirect', 'records': []})
+                {'name': line[headers.index('group')], 'nicknames': [],
+                'term_type': 'indirect', 'records': []})
             temp_entry_dict = {'name': line[headers.index('name')]}
             if 'label_tooltip' in headers:
                 temp_entry_dict['tooltip'] = line[headers.index('label_tooltip')]
@@ -157,21 +173,68 @@ if os.path.isfile(group_data_path):
                     set(line[headers.index('nicknames')].split(',')).union(
                     set(search_terms_dict[line[headers.index('group')]]['nicknames'])))
             search_terms_dict[line[headers.index('group')]]['records'].append(temp_entry_dict)
+            # Table information dict
             table_information_dict.setdefault(line[headers.index('name')], {})
-            table_information_dict[line[headers.index('name')]].setdefault('groups', [])
+            table_information_dict[line[headers.index('name')]].setdefault(
+                'groups', [])
             temp_table_entry_dict = {}
             for idx in range(len(headers)):
                 if not headers[idx] == 'name':
                     temp_table_entry_dict[headers[idx]] = line[idx]
             table_information_dict[line[headers.index('name')]]['groups'].append(temp_table_entry_dict)
+            if (len(search_terms_dict.keys()) +
+                len(table_information_dict.keys())) > dump_threshold:
+                current_time = time.time()
+                print('Beginning search and table terms dump. Time since last dump: %s seconds' % (current_time - last_time))
+                last_time = current_time
+                search_terms_collection.bulk_write([
+                    UpdateOne({'_id': search_terms_dict[name]['name']},
+                        {'$push': {'records': {'$each':
+                            search_terms_dict[name]['records']}},
+                        '$set': {'name': search_terms_dict[name]['name'],
+                            'nicknames': search_terms_dict[name]['nicknames'],
+                            'term_type': search_terms_dict[name]['term_type']}},
+                        upsert=True)
+                    for name in search_terms_dict])
+                search_terms_dict = {}
+                measurements_collection.bulk_write([
+                    UpdateOne({'_id': name},
+                        {'$push': {'table_details.groups': {'$each':
+                            table_information_dict[name]['groups']}}},
+                        upsert=True)
+                    for name in table_information_dict])
+                table_information_dict = {}
+                current_time = time.time()
+                print('Dumped! Time to dump: %s seconds' %
+                      (current_time - last_time))
+                last_time = current_time
+        current_time = time.time()
+        print('Beginning search and table terms dump. Time since last dump: %s seconds' % (current_time - last_time))
+        last_time = current_time
+        search_terms_collection.bulk_write([
+            UpdateOne({'_id': search_terms_dict[name]['name']},
+                {'$push': {'records': {'$each':
+                    search_terms_dict[name]['records']}},
+                '$set': {'name': search_terms_dict[name]['name'],
+                    'nicknames': search_terms_dict[name]['nicknames'],
+                    'term_type': search_terms_dict[name]['term_type']}},
+                upsert=True)
+            for name in search_terms_dict])
+        search_terms_dict = {}
+        measurements_collection.bulk_write([
+            UpdateOne({'_id': name},
+                {'$push': {'table_details.groups': {'$each':
+                    table_information_dict[name]['groups']}}},
+                upsert=True)
+            for name in table_information_dict])
+        table_information_dict = {}
+        current_time = time.time()
+        print('Dumped! Time to dump: %s seconds' %
+                (current_time - last_time))
+        last_time = current_time
 
 if os.path.isfile(record_data_path) or os.path.isfile(group_data_path):
     flags_dict['groups_available'] = True
-    measurements_collection.bulk_write([
-        UpdateOne({'_id': key},
-            {'$set': {'table_details': table_information_dict[key]}},
-            upsert=True)
-        for key in table_information_dict])
 else:
     flags_dict['groups_available'] = False
 
@@ -255,11 +318,6 @@ if os.path.isfile(plot_regions_data_path):
                 headers[idx]: line[idx] for idx in range(len(headers))})
 else:
     print('No plot region data')
-
-# Create the search terms collection
-search_terms_collection = db['search_terms']
-for document in search_terms_dict.values():
-    search_terms_collection.insert(document)
 
 # Create the flags YAML
 yaml_path = os.path.join(os.environ['CONTENT_LOCATION'], 'flags.yaml')
