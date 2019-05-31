@@ -4,7 +4,7 @@ $(document).ready(function(){
         valueField: 'name',
         labelField: 'name',
         searchField: ['name', 'nicknames'],
-        plugins: ['remove_button'],
+        plugins: ['remove_button', 'no_results'],
         options: [],
         create: false,
         load: function(query, callback) {

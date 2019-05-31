@@ -152,3 +152,17 @@ p {
     margin-left: 5px;
     margin-right: 5px;
 }
+
+.selectize-dropdown [data-selectable],
+.selectize-dropdown .optgroup-header,
+.selectize-dropdown .no-results {
+  padding: 5px 8px;
+}
+.selectize-dropdown .active.create,
+.selectize-dropdown .active.no-results {
+  color: #495c68;
+}
+.selectize-dropdown .create,
+.selectize-dropdown .no-results {
+  color: rgba(48, 48, 48, 0.5);
+}
