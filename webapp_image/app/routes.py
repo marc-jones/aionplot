@@ -188,7 +188,7 @@ def autocomplete():
     search_term = request.args.get('term')
     db = mungo_client['time_series']
     search_terms_collection = db['search_terms']
-    regx = re.compile('^' + search_term, re.IGNORECASE)
+    regx = re.compile(search_term, re.IGNORECASE)
     search_results = [{'name': res['name'], 'nicknames': res['nicknames']}
         for res in search_terms_collection.find({ '$or': [{'_id': regx},
         {'nicknames': {'$in': [regx]}}]}).limit(20)]
