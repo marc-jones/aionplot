@@ -1,22 +1,3 @@
-// Sets up the Download buttons
-
-
-
-// What to do when the window resizes
-$(window).on('resize', function() {
-    var flipped = false;
-//     if ($('#flip_axis')[0].checked) {
-//         flipped = true;}
-    var display_errors = false;
-    if ($('#error_bars')[0].checked) {
-        display_errors = true;}
-    if (typeof min_max_arrays_global != 'undefined') {
-        if ($('#search').hasClass('active')) {
-            plot_graph(flipped, display_errors, min_max_arrays_global);
-        };
-    };
-});
-
 
 var plot_graph = function(flipped, display_errors, min_max_arrays) {
     var aspect_ratio = plot_vars.aspect_ratio;
