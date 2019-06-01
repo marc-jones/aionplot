@@ -170,7 +170,11 @@ var filterRegionData = function(measurement_data, region_data)
             filteredRegions = filteredRegions.concat(plotRegions);
         }
     }
-    return(filteredRegions);
+    if (filteredRegions.length == 0) {
+        return(undefined);
+    } else {
+        return(filteredRegions);
+    }
 }
 
 var returnPlotDetailsObject = function(measurement_data, region_data, svg)
