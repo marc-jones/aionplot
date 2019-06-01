@@ -102,40 +102,40 @@ def get_flags():
         }
     return(flags)
 
-@app.route('/user_content/<path:filename>')
-def user_content(filename):
+@app.route('/website_content/<path:filename>')
+def website_content(filename):
     return(send_from_directory(os.path.join(os.environ['CONTENT_LOCATION'],
-        'user_content'), filename))
+        'website_content'), filename))
 
 @app.route('/')
 def landing():
     flags=get_flags()
     landing_markdown = 'static/content/landing.md'
     user_landing_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
-        'user_content', 'landing.md')
+        'website_content', 'landing.md')
     if os.path.isfile(user_landing_markdown):
         landing_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
-            'user_content', 'landing.md')
+            'website_content', 'landing.md')
     with app.open_resource(landing_markdown) as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
         content = render_template_string(content)
     landingPage = render_template('MarkdownBase.html', content=content)
     about_markdown = 'static/content/about.md'
     user_about_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
-        'user_content', 'about.md')
+        'website_content', 'about.md')
     if os.path.isfile(user_about_markdown):
         about_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
-            'user_content', 'about.md')
+            'website_content', 'about.md')
     with app.open_resource(about_markdown) as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
         content = render_template_string(content)
     aboutPage = render_template('MarkdownBase.html', content=content)
     howtouse_markdown = 'static/content/howtouse.md'
     user_howtouse_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
-        'user_content', 'howtouse.md')
+        'website_content', 'howtouse.md')
     if os.path.isfile(user_howtouse_markdown):
         howtouse_markdown = os.path.join(os.environ['CONTENT_LOCATION'],
-            'user_content', 'howtouse.md')
+            'website_content', 'howtouse.md')
     with app.open_resource(howtouse_markdown) as f:
         content = Markup(markdown.markdown(unicode(f.read(), 'utf-8')))
         content = render_template_string(content)
@@ -146,9 +146,9 @@ def landing():
     searchandplotjs = render_template('SearchAndPlot.js', flags=flags)
     favicon_location = url_for('static', filename='content/favicon.ico')
     user_favicon_location = os.path.join(os.environ['CONTENT_LOCATION'],
-        'user_content', 'favicon.ico')
+        'website_content', 'favicon.ico')
     if os.path.isfile(user_favicon_location):
-        favicon_location = url_for('user_content', filename='favicon.ico')
+        favicon_location = url_for('website_content', filename='favicon.ico')
     return(render_template('Base.html',
                            landingPage=landingPage,
                            aboutPage=aboutPage,
