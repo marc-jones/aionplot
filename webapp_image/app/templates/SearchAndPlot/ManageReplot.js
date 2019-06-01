@@ -42,7 +42,14 @@ $(document).on("replot", function() {
             }
         });
         if (filtered_measurements.length > 0) {
+            var tooltip = '';
+            if (record.table_details != undefined) {
+                if (record.table_details.label_tooltip != undefined) {
+                    tooltip = record.table_details.label_tooltip;
+                }
+            }
             filtered_measurement_data.push({name: record.name,
+                tooltip: tooltip,
                 group: record.group,
                 measurements: filtered_measurements});
         }

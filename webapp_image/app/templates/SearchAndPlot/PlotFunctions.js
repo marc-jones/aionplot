@@ -183,8 +183,10 @@ var returnPlotDetailsObject = function(measurement_data, region_data, svg)
     var svgHeight = parseInt(svg.attr('height'));
 
     // Determining the size of the record legend
-    var legendLabels = measurement_data.map(function(d) {return(d.name);});
-    var maxLegendLabelWidth = returnMaximumLegendLabelWidth(legendLabels, svg);
+    var legendLabels = measurement_data.map(function(d) {
+        return({name: d.name, tooltip: d.tooltip});});
+    var maxLegendLabelWidth = returnMaximumLegendLabelWidth(
+        legendLabels.map(function(d) {return(d.name);}), svg);
     var numLegendCols = Math.floor(
         (svgWidth * plot_vars.legendWidthProportion) /
         (plot_vars.margin.legendline + (plot_vars.margin.spacing * 2) +
@@ -543,7 +545,8 @@ var addRecords = function(plotDetails, plotsD3Selection)
     recordSelection.each(function(d, i) {
         var currentRecord = d3.select(this);
         var totalRecordNumber = plotDetails.legendLabels.length;
-        var colour = returnColour(plotDetails.legendLabels.indexOf(d.name),
+        var colour = returnColour(plotDetails.legendLabels
+            .map(function(d) {return(d.name);}).indexOf(d.name),
             totalRecordNumber);
         currentRecord.selectAll('path').filter('.point').attr('fill', colour);
         currentRecord.selectAll('path').filter('.line').attr('stroke', colour);
@@ -580,83 +583,95 @@ var addLegend = function(plotDetails, svgD3Selection)
     var legendGroup = svgD3Selection.append('g').attr('class', 'legend');
     var recordLegendKeys = legendGroup.selectAll('g')
         .data(plotDetails.legendLabels).enter().append('g')
-        .attr('name', passThrough).classed('key', true);
+        .attr('name', function(d) {return(d.name);}).classed('key', true);
 
-    recordLegendKeys.append('rect').attr('x', function(name, i) {
+    recordLegendKeys.append('rect').attr('x', function(legendDetails, i) {
         return(returnLegendPosition(plotDetails, i, {x:0, y:0}).x);})
-        .attr('y', function(name, i) {
+        .attr('y', function(legendDetails, i) {
             return(returnLegendPosition(plotDetails, i, {x:0, y:0}).y);})
         .attr('width', plot_vars.margin.legendline)
         .attr('height', plot_vars.margin.legendline)
         .attr('class', 'plotbackground');
 
-    recordLegendKeys.append('path').attr('transform', function(name, i) {
+    recordLegendKeys.append('path').attr('transform', function(legendDetails, i) {
         var position = returnLegendPosition(plotDetails, i,
             {x: plot_vars.margin.legendline / 2,
             y: plot_vars.margin.legendline / 2});
         return('translate(' + position.x + ',' + position.y + ')');})
         .attr('d', d3.symbol().size(plot_vars.symbolSize).type(d3.symbols[0]));
 
-    recordLegendKeys.append('line').attr('y1', function(name, i) {
+    recordLegendKeys.append('line').attr('y1', function(legendDetails, i) {
         return(returnLegendPosition(plotDetails, i, {
         x:plot_vars.margin.legendline +
         plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
-        .attr('y2', function(name, i) {
+        .attr('y2', function(legendDetails, i) {
         return(returnLegendPosition(plotDetails, i, {
         x:plot_vars.margin.legendline +
         plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);})
-        .attr('x1', function(name, i) {
+        .attr('x1', function(legendDetails, i) {
         return(returnLegendPosition(plotDetails, i, {x:0, y:0}).x);})
-        .attr('x2', function(name, i) {
+        .attr('x2', function(legendDetails, i) {
         return(returnLegendPosition(plotDetails, i, {
         x:plot_vars.margin.legendline, y:0}).x);});
 
-    recordLegendKeys.append('text').text(passThrough)
-        .attr('alignment-baseline', 'middle').attr('x', function(name, i) {
+    recordLegendKeys.append('text')
+        .text(function(legendDetails) {return(legendDetails.name);})
+        .attr('alignment-baseline', 'middle').attr('x', function(legendDetails, i) {
             return(returnLegendPosition(plotDetails, i, {
             x:plot_vars.margin.legendline + plot_vars.margin.spacing,
             y:plot_vars.margin.legendline / 2}).x);})
-        .attr('y', function(name, i) {return(returnLegendPosition(
+        .attr('y', function(legendDetails, i) {return(returnLegendPosition(
             plotDetails, i, {x:plot_vars.margin.legendline +
             plot_vars.margin.spacing, y:plot_vars.margin.legendline / 2}).y);});
 
-    recordLegendKeys.each(function(name, i) {
+    recordLegendKeys.each(function(legendDetails, i) {
         var currentRecord = d3.select(this);
         var totalRecordNumber = plotDetails.legendLabels.length;
-        var colour = returnColour(plotDetails.legendLabels.indexOf(name),
+        var colour = returnColour(plotDetails.legendLabels
+            .map(function(d) {return(d.name);}).indexOf(legendDetails.name),
             totalRecordNumber);
         currentRecord.selectAll('path').attr('fill', colour);
         currentRecord.selectAll('line').attr('stroke', colour);
     });
 
-    recordLegendKeys.on('mouseover', function(name) {
-
+    recordLegendKeys.on('mouseover', function(legendDetails) {
         d3.selectAll('.record').filter(function(d) {
-            return(d.name != name);}).selectAll('*').transition()
+            return(d.name != legendDetails.name);}).selectAll('*').transition()
             .duration(300).style('opacity', 0.1);
 
         var selectedGeneNodes = d3.selectAll('.record').filter(function(d) {
-            return(d.name == name);}).nodes();
+            return(d.name == legendDetails.name);}).nodes();
 
         selectedGeneNodes.forEach(function(node) {
             d3.select(node.parentNode.appendChild(
             node.cloneNode(true))).classed('temporary', true);})
     })
 
-    recordLegendKeys.on('mouseout', function(name) {
-
+    recordLegendKeys.on('mouseout', function(legendDetails) {
         d3.selectAll('.record').filter(function(d) {
-            return(d == undefined || d.name != name);}).selectAll('*')
+            return(d == undefined || d.name != legendDetails.name);}).selectAll('*')
             .transition()
             .duration(300)
             .style('opacity', 1);
 
         d3.selectAll('.temporary').remove();
-
     })
 
-    if (plotDetails.numGroupsCols != 0 && plotDetails.numGroupsRows != 0) {
+    recordLegendKeys.each(function(legendDetails, i) {
+        var bbox = this.getBBox();
+        d3.select(this).append('rect')
+            .attr('class', 'hover-capture')
+            .attr('data-toggle', 'tooltip')
+            .attr('title', function(d) {return(legendDetails.tooltip);})
+            .style('visibility', 'hidden')
+            .attr('x', function() {return bbox.x;})
+            .attr('y', function() {return bbox.y;})
+            .attr('width', function() {return bbox.width;})
+            .attr('height', function() {return bbox.height;});
+    });
+    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
 
+    if (plotDetails.numGroupsCols != 0 && plotDetails.numGroupsRows != 0) {
         var groupsLegendGroup = svgD3Selection.append('g').attr('class',
             'group_legend');
         var groupsLegendKeys = groupsLegendGroup.selectAll('g')
