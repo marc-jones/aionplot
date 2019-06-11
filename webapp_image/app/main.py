@@ -2,8 +2,10 @@ import os
 from flask import Flask
 from pymongo import MongoClient
 import logging, sys
+from flask_compress import Compress
 
 app = Flask(__name__)
+Compress(app)
 
 app.secret_key = os.environ['WEBAPP_SECRET']
 

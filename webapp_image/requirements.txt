@@ -4,3 +4,4 @@ markdown
 pyyaml
 pdfkit
 gunicorn
+flask-compress
