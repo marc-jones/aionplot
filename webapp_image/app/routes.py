@@ -15,36 +15,20 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 def get_measurement_data(list_of_names):
-    if 'most_recent_search' in session:
-        cache = session['most_recent_search']
-        cached_names = [res['name'] for res in cache]
-    else:
-        cached_names = []
-    # only open the connection to the database if one of the records isn't in
-    # the cache. usually this won't be the case, but if the user has more than
-    # one instance of the app open, then it will be a problem. This is also
-    # necessary if the user has turned off cookies
     for name, group in list_of_names:
-        if not name in cached_names:
-            db = mungo_client['time_series']
-            measurements_collection = db['measurements']
-            break
+        db = mungo_client['time_series']
+        measurements_collection = db['measurements']
+        break
     records = []
     for name, group in list_of_names:
-        if name in cached_names:
-            record_dict = cache[cached_names.index(name)]
-            record_dict['group'] = group
-            records.append(record_dict)
-        else:
-            search_results = [
-                res for res in measurements_collection.find({'_id': name})]
-            for res in search_results:
-                res['group'] = group
-            records += search_results
+        search_results = [
+            res for res in measurements_collection.find({'_id': name})]
+        for res in search_results:
+            res['group'] = group
+        records += search_results
     for res in records:
         if '_id' in res.keys():
             del(res['_id'])
-    session['most_recent_search'] = records
     return(records)
 
 # Takes search terms and then returns the names associated with each search
