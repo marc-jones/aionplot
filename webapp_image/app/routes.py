@@ -144,10 +144,10 @@ def landing():
                            flags=flags,
                            favicon_location=favicon_location))
 
-@app.route('/postsearch')
+@app.route('/postsearch', methods=['POST'])
 def postsearch():
-    search_terms = request.args.get('term').split(',')
-    query_sequence = request.args.get('sequence')
+    search_terms = request.json['term'].split(',')
+    query_sequence = request.json['sequence']
     blast_list = blastquery(query_sequence)
     checkbox_dict = process_search_terms(search_terms, blast_list)
     return(jsonify(
