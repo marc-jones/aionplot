@@ -154,7 +154,8 @@ def postsearch():
         checkbox_html=render_template('Checkboxes.html',
             checkbox_dict=checkbox_dict),
         blast_alert_html=render_template('BlastAlert.html',
-            blast_hits_int=len(blast_list), query_sequence=query_sequence)
+            blast_hits_int=len(blast_list), query_sequence=query_sequence),
+        blast_results=blast_list
     ))
 
 @app.route('/postcheckboxchange')
@@ -255,7 +256,8 @@ def blastquery(query_sequence):
             identity = [float(e.text) for e in hit.iter('Hsp_identity')][0]
             bit_score = [float(e.text) for e in hit.iter('Hsp_bit-score')][0]
             hsp_length = [float(e.text) for e in hit.iter('Hsp_align-len')][0]
-            search_results[hit_def] = {'identity': identity,
-                                    'bit_score': bit_score,
-                                    'hsp_length': hsp_length}
+            search_results[hit_def] = {
+                'BLAST Identity': 100*(float(identity) / float(hsp_length)),
+                'BLAST HSP Bit Score': bit_score,
+                'BLAST HSP Length': hsp_length}
     return(search_results)

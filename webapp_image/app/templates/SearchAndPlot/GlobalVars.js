@@ -45,3 +45,5 @@ plot_vars = {
 }
 
 measurement_data = {}
+
+blast_results = {}

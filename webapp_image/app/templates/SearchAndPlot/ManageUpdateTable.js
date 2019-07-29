@@ -58,13 +58,24 @@ $(document).on('update_table', function() {
                     if (group != '' && group != 'BLAST Hits') {
                         table_details['groups'].forEach(function(group_record, idx) {
                             if (group_record.group == group) {
-                                column_titles = column_titles.concat(Object.keys(table_details['groups'][idx]));
-                                var row_object_clone = JSON.parse(JSON.stringify(row_object));
+                                column_titles = column_titles.concat(
+                                    Object.keys(table_details['groups'][idx]));
+                                var row_object_clone = JSON.parse(
+                                    JSON.stringify(row_object));
                                 Object.entries(table_details['groups'][idx]).forEach(
                                     function(entry) {row_object_clone[entry[0]] = entry[1];});
                                 data_table_array.push(row_object_clone);
                             }
                         });
+                    } else if (group == 'BLAST Hits') {
+                        var row_object_clone = JSON.parse(
+                            JSON.stringify(row_object));
+                        Object.entries(blast_results[name]).forEach(
+                            function(entry) {row_object_clone[entry[0]] = entry[1];});
+                        row_object_clone['Origin'] = 'BLAST Hit';
+                        column_titles = column_titles.concat(
+                            Object.keys(row_object_clone));
+                        data_table_array.push(row_object_clone);
                     } else {
                         data_table_array.push(row_object);
                     }

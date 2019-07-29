@@ -23,6 +23,7 @@ var update_checkboxes = function()
                 }
             });
             $('#blast_alert').html(data.blast_alert_html);
+            blast_results = data.blast_results;
         },
         failure: function(errMsg) {
             console.log('Failure: ' + errMsg);
