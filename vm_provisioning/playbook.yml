@@ -6,6 +6,16 @@
 
   tasks:
 
+    - name: install yum-plugin-ovl
+      yum:
+        name: yum-plugin-ovl
+        state: present
+
+    - name: create /etc/docker/daemon.json
+      copy:
+        src: docker_daemon.json
+        dest: /etc/docker/daemon.json
+
     - name: install firewalld
       yum:
         name: firewalld
