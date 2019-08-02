@@ -29,6 +29,12 @@ MONGO_DBADMIN_PASSWORD: change_me
 LOCAL_DATA_DIR: ~/Documents/time-series-data-files
 ```
 
+The Ansible playbook also requires a file called ``docker_daemon.json``. This file can be created using the command below.
+
+```
+cp docker_daemon_template.json docker_daemon.json
+```
+
 ### Add the production server to be configured to a ``hosts`` file
 
 ```

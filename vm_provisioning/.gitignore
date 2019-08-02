@@ -1,3 +1,4 @@
 .vagrant
+docker_daemon.json
 
 *.retry
