@@ -147,7 +147,9 @@ def landing():
 @app.route('/postsearch', methods=['POST'])
 def postsearch():
     search_terms = request.json['term'].split(',')
-    query_sequence = request.json['sequence']
+    query_sequence = ''
+    if 'sequence' in request.json:
+        query_sequence = request.json['sequence']
     blast_list = blastquery(query_sequence)
     checkbox_dict = process_search_terms(search_terms, blast_list)
     return(jsonify(
