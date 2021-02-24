@@ -1,5 +1,5 @@
-AIONPLOT_FLASKAPP_IMAGE: "dmarcjones/aionplot-flaskapp"
-AIONPLOT_POPULATOR_IMAGE: "dmarcjones/aionplot-populator"
+AIONPLOT_FLASKAPP_IMAGE: "dmarcjones/aionplot-flaskapp:0.7"
+AIONPLOT_POPULATOR_IMAGE: "dmarcjones/aionplot-populator:0.4"
 MONGO_IMAGE: "mongo:4.0.6"
 NGINX_IMAGE: "nginx:1.14.2"
 NGINX_CONFIG_DIR: "/opt/nginx"

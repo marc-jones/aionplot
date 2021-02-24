@@ -11,6 +11,11 @@
         name: yum-plugin-ovl
         state: present
 
+    - name: create /etc/docker
+      file:
+        path: /etc/docker/
+        state: directory
+
     - name: create /etc/docker/daemon.json
       copy:
         src: docker_daemon.json
@@ -29,7 +34,7 @@
       notify: restart docker daemon
 
     - name: enable and persist http/https ports
-      firewalld:
+      ansible.posix.firewalld:
         service: "{{ item }}"
         permanent: yes
         state: enabled
@@ -38,7 +43,7 @@
       notify: restart docker daemon
 
     - name: enable and persist extra ports
-      firewalld:
+      ansible.posix.firewalld:
         port: "{{ item }}"
         permanent: yes
         state: enabled
@@ -48,7 +53,7 @@
 
     - name: download get-pip.py
       get_url:
-        url: https://bootstrap.pypa.io/get-pip.py
+        url: https://bootstrap.pypa.io/2.7/get-pip.py
         dest: /opt/get_pip.py
       register: get_pip_downloaded
 
